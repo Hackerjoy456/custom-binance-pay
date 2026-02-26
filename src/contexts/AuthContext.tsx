@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface AuthContextType {
   user: User | null;
@@ -21,8 +22,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAdmin, setIsAdmin] = useState(false);
 
   const checkAdmin = async (userId: string) => {
-    const { data } = await supabase.rpc("has_role", { _user_id: userId, _role: "admin" });
-    setIsAdmin(!!data);
+    const [{ data: adminData }, { data: profile }] = await Promise.all([
+      supabase.rpc("has_role", { _user_id: userId, _role: "admin" }),
+      supabase.from("profiles").select("is_banned").eq("user_id", userId).single()
+    ]);
+
+    if (profile?.is_banned) {
+      toast.error("Your account has been banned.");
+      signOut();
+      return;
+    }
+
+    setIsAdmin(!!adminData);
   };
 
   useEffect(() => {

@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { safeError } from "@/lib/safe-error";
 
@@ -53,16 +54,23 @@ export default function Login() {
 
     setLoading(true);
     const { error } = await signIn(trimmedEmail, password);
+
     if (error) {
-      const newAttempts = attempts + 1;
-      setAttempts(newAttempts);
-      if (newAttempts >= MAX_ATTEMPTS) {
-        setLockoutUntil(Date.now() + LOCKOUT_DURATION_MS);
+      const { data: isBanned } = await supabase.rpc("check_is_banned", { target_email: trimmedEmail });
+
+      if (isBanned) {
+        toast.error("Your account has been banned. Please contact support.");
         setAttempts(0);
-        toast.error("Too many failed attempts. Account temporarily locked for 2 minutes.");
       } else {
-        // Generic error — don't reveal if email exists
-        toast.error("Invalid email or password.");
+        const newAttempts = attempts + 1;
+        setAttempts(newAttempts);
+        if (newAttempts >= MAX_ATTEMPTS) {
+          setLockoutUntil(Date.now() + LOCKOUT_DURATION_MS);
+          setAttempts(0);
+          toast.error("Too many failed attempts. Account temporarily locked for 2 minutes.");
+        } else {
+          toast.error("Invalid email or password.");
+        }
       }
     } else {
       setAttempts(0);
