@@ -124,7 +124,19 @@ export default function Checkout() {
                 toast.success("Payment verified successfully! 🎉");
                 setSuccess(true);
                 if (successUrl) {
-                    setTimeout(() => { window.location.href = successUrl; }, 3000);
+                    setTimeout(() => {
+                        try {
+                            const redirectUrl = new URL(successUrl);
+                            if (orderId) redirectUrl.searchParams.append("order_id", orderId);
+                            if (data.amount) redirectUrl.searchParams.append("amount", data.amount.toString());
+                            redirectUrl.searchParams.append("tx_id", currentTxId.trim());
+                            redirectUrl.searchParams.append("status", "success");
+                            window.location.href = redirectUrl.toString();
+                        } catch (err) {
+                            // If successUrl is an invalid URL, just fallback to raw redirect
+                            window.location.href = successUrl;
+                        }
+                    }, 3000);
                 }
             } else {
                 toast.error(data.error || "Verification failed. Check your transaction details.");

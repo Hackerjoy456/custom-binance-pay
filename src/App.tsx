@@ -19,6 +19,7 @@ import ApiConfig from "./pages/dashboard/ApiConfig";
 import ApiKeys from "./pages/dashboard/ApiKeys";
 import Logs from "./pages/dashboard/Logs";
 import IntegrationGuide from "./pages/dashboard/IntegrationGuide";
+import PaymentLinks from "./pages/dashboard/PaymentLinks";
 import AdminUsers from "./pages/admin/Users";
 import AdminSubscriptions from "./pages/admin/Subscriptions";
 import AdminSettings from "./pages/admin/Settings";
@@ -47,6 +48,7 @@ const App = () => {
                 <Route path="subscription" element={<Subscription />} />
                 <Route path="api-config" element={<SubscriptionGate><ApiConfig /></SubscriptionGate>} />
                 <Route path="api-keys" element={<SubscriptionGate><ApiKeys /></SubscriptionGate>} />
+                <Route path="payment-links" element={<SubscriptionGate><PaymentLinks /></SubscriptionGate>} />
                 <Route path="logs" element={<Logs />} />
                 <Route path="integration" element={<IntegrationGuide />} />
               </Route>

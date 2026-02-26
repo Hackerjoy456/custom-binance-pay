@@ -1,4 +1,4 @@
-import { LayoutDashboard, Settings, Key, Activity, CreditCard, Shield, Users, BarChart3, Cog, FileText, LogOut, BookOpen } from "lucide-react";
+import { LayoutDashboard, Settings, Key, Activity, CreditCard, Shield, Users, BarChart3, Cog, FileText, LogOut, BookOpen, Link } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -20,6 +20,7 @@ const userItems = [
   { title: "Subscription", url: "/dashboard/subscription", icon: CreditCard },
   { title: "API Config", url: "/dashboard/api-config", icon: Settings },
   { title: "API Keys", url: "/dashboard/api-keys", icon: Key },
+  { title: "Payment Links", url: "/dashboard/payment-links", icon: Link },
   { title: "Usage Logs", url: "/dashboard/logs", icon: Activity },
   { title: "Integration", url: "/dashboard/integration", icon: BookOpen },
 ];
