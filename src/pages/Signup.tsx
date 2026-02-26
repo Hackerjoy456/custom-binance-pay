@@ -76,8 +76,9 @@ export default function Signup() {
       // Generic error message
       toast.error("Could not create account. Please try again.");
     } else {
-      toast.success("Account created! Please check your email to verify.");
-      navigate("/login");
+      toast.success("Account created successfully!");
+      // Since email confirmation is off, they are automatically logged in or can proceed
+      navigate("/dashboard");
     }
     setLoading(false);
   };
