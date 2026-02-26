@@ -260,154 +260,166 @@ export default function Checkout() {
     const hasBinancePay = !!config.binance_pay?.pay_id;
 
     return (
-        <div className="min-h-screen bg-slate-950 flex flex-col items-center py-12 px-4 relative overflow-hidden font-sans selection:bg-primary/30">
+        <div className="min-h-screen bg-slate-950 flex flex-col items-center py-6 sm:py-12 px-3 sm:px-4 relative overflow-hidden font-sans selection:bg-primary/30">
             {/* Premium Background Effects */}
             <div className="fixed inset-0 pointer-events-none">
                 <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/10 rounded-full blur-[120px]" />
                 <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-primary/10 rounded-full blur-[120px]" />
-                <div className="absolute top-[40%] left-[50%] translate-x-[-50%] translate-y-[-50%] w-[60%] h-[60%] bg-blue-900/5 rounded-full blur-[100px]" />
             </div>
 
-            <div className="w-full max-w-[440px] space-y-6 relative z-10">
+            <div className="w-full max-w-[440px] space-y-4 sm:space-y-6 relative z-10">
                 {/* Header Section */}
-                <div className="text-center space-y-3 mb-8">
-                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-primary/20 bg-primary/10 text-primary text-xs font-semibold backdrop-blur-md shadow-[0_0_15px_rgba(var(--primary),0.2)]">
+                <div className="text-center space-y-2 sm:space-y-3">
+                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-primary/20 bg-primary/10 text-primary text-xs font-semibold backdrop-blur-md">
                         <Shield className="h-3.5 w-3.5" />
                         Secure Crypto Checkout
                     </div>
-                    <h1 className="text-3xl md:text-4xl font-extrabold text-white tracking-tight">
+                    <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-white tracking-tight">
                         Complete Order
                     </h1>
-                     <p className="text-slate-400 text-sm">Send the exact amount below to proceed</p>
-
-                    {/* Countdown Timer */}
-                    <div className="mt-3">
-                        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border bg-slate-900/80 backdrop-blur-sm text-xs font-mono font-bold"
-                            style={{
-                                borderColor: isUrgent ? 'rgba(239,68,68,0.4)' : 'rgba(148,163,184,0.2)',
-                                color: isUrgent ? '#f87171' : '#94a3b8',
-                            }}
-                        >
-                            <Clock className={`h-3.5 w-3.5 ${isUrgent ? 'animate-pulse' : ''}`} />
-                            <span>{formatTime(timeLeft)}</span>
-                        </div>
-                        {/* Progress bar */}
-                        <div className="mt-2 mx-auto w-32 h-1 rounded-full bg-slate-800 overflow-hidden">
-                            <div
-                                className="h-full rounded-full transition-all duration-1000 ease-linear"
-                                style={{
-                                    width: `${timerPercent}%`,
-                                    backgroundColor: isUrgent ? '#ef4444' : 'hsl(var(--primary))',
-                                }}
-                            />
-                        </div>
-                    </div>
+                    <p className="text-slate-400 text-sm">Send the exact amount below to proceed</p>
                 </div>
 
                 {/* Main Payment Card */}
                 <Card className="border-slate-800 bg-slate-900/80 backdrop-blur-xl shadow-2xl relative overflow-hidden ring-1 ring-white/5">
-                    <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary via-blue-400 to-primary/50" />
+                    <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary via-yellow-500 to-primary/50" />
 
-                    <CardHeader className="bg-slate-950/40 border-b border-slate-800/80 text-center pb-8 pt-8">
-                        <CardDescription className="text-xs uppercase tracking-widest font-bold text-slate-400 mb-2">
+                    {/* Amount + Timer Header */}
+                    <CardHeader className="bg-slate-950/40 border-b border-slate-800/80 text-center pb-5 sm:pb-8 pt-5 sm:pt-8 px-4 sm:px-6 space-y-3">
+                        <CardDescription className="text-[10px] sm:text-xs uppercase tracking-widest font-bold text-slate-400 mb-1">
                             Total to Pay
                         </CardDescription>
-                        <div className="flex items-center justify-center gap-2">
-                            <span className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-br from-white to-slate-300 tracking-tighter">
+                        <div className="flex items-baseline justify-center gap-1.5 sm:gap-2">
+                            <span className="text-4xl sm:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-br from-white to-slate-300 tracking-tighter">
                                 ${amount?.toFixed(2)}
                             </span>
-                            <span className="text-xl font-bold text-primary mt-2">USDT</span>
+                            <span className="text-lg sm:text-xl font-bold text-primary">USDT</span>
                         </div>
                         {orderId && (
-                            <Badge variant="outline" className="mt-4 border-slate-700 bg-slate-800/50 text-slate-300 px-3 py-1 text-xs">
+                            <Badge variant="outline" className="border-slate-700 bg-slate-800/50 text-slate-300 px-3 py-1 text-[10px] sm:text-xs">
                                 Ref: {orderId}
                             </Badge>
                         )}
+
+                        {/* ── Countdown Timer (inside header for visibility) ── */}
+                        <div className="pt-2">
+                            <div className={`
+                                inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-mono font-bold
+                                border backdrop-blur-sm transition-all duration-500
+                                ${isUrgent
+                                    ? 'border-red-500/40 bg-red-500/10 text-red-400 shadow-[0_0_15px_rgba(239,68,68,0.15)]'
+                                    : 'border-slate-700 bg-slate-800/60 text-slate-300'
+                                }
+                            `}>
+                                <Clock className={`h-3.5 w-3.5 ${isUrgent ? 'animate-pulse text-red-400' : 'text-primary'}`} />
+                                <span className="tabular-nums text-sm">{formatTime(timeLeft)}</span>
+                                <span className="text-[10px] font-sans font-medium opacity-60">remaining</span>
+                            </div>
+                            {/* Progress bar */}
+                            <div className="mt-2.5 mx-auto w-40 h-1 rounded-full bg-slate-800 overflow-hidden">
+                                <div
+                                    className="h-full rounded-full transition-all duration-1000 ease-linear"
+                                    style={{
+                                        width: `${timerPercent}%`,
+                                        backgroundColor: isUrgent ? '#ef4444' : 'hsl(var(--primary))',
+                                    }}
+                                />
+                            </div>
+                        </div>
                     </CardHeader>
 
-                    <CardContent className="p-6 space-y-7">
-                        {/* Custom Payment Method Tabs */}
-                        <div className="flex bg-slate-950 p-1.5 rounded-xl ring-1 ring-slate-800 shadow-inner">
-                            {hasBep20 && (
+                    <CardContent className="p-4 sm:p-6 space-y-5 sm:space-y-6">
+                        {/* Payment Method Tabs */}
+                        {(hasBep20 && hasBinancePay) && (
+                            <div className="flex bg-slate-950 p-1.5 rounded-xl ring-1 ring-slate-800 shadow-inner">
                                 <button
-                                    className={`flex-1 py-2.5 text-sm font-semibold rounded-lg transition-all flex items-center justify-center gap-2 ${paymentType === 'bep20'
+                                    className={`flex-1 py-2.5 text-xs sm:text-sm font-semibold rounded-lg transition-all flex items-center justify-center gap-1.5 sm:gap-2 ${paymentType === 'bep20'
                                         ? 'bg-slate-800 text-white shadow-md ring-1 ring-slate-700'
                                         : 'text-slate-400 hover:text-white hover:bg-slate-900/50'}`}
-                                    onClick={() => {
-                                        setPaymentType('bep20');
-                                        setVerifyResult(null);
-                                    }}
+                                    onClick={() => { setPaymentType('bep20'); setVerifyResult(null); }}
                                 >
                                     <Wallet className="h-4 w-4" /> BEP20 (BSC)
                                 </button>
-                            )}
-                            {hasBinancePay && (
                                 <button
-                                    className={`flex-1 py-2.5 text-sm font-semibold rounded-lg transition-all flex items-center justify-center gap-2 ${paymentType === 'binance_pay'
+                                    className={`flex-1 py-2.5 text-xs sm:text-sm font-semibold rounded-lg transition-all flex items-center justify-center gap-1.5 sm:gap-2 ${paymentType === 'binance_pay'
                                         ? 'bg-slate-800 text-white shadow-md ring-1 ring-slate-700'
                                         : 'text-slate-400 hover:text-white hover:bg-slate-900/50'}`}
-                                    onClick={() => {
-                                        setPaymentType('binance_pay');
-                                        setVerifyResult(null);
-                                    }}
+                                    onClick={() => { setPaymentType('binance_pay'); setVerifyResult(null); }}
                                 >
                                     <CreditCard className="h-4 w-4" /> Binance Pay
                                 </button>
-                            )}
-                        </div>
+                            </div>
+                        )}
 
-                        {/* Payment Details Container */}
-                        <div className="space-y-5 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                        {/* Only show one tab if only one method */}
+                        {(hasBep20 && !hasBinancePay) && (
+                            <div className="flex items-center gap-2 text-xs text-slate-400">
+                                <Wallet className="h-4 w-4 text-primary" />
+                                <span className="font-semibold text-slate-300">BEP20 (BSC) Transfer</span>
+                            </div>
+                        )}
+                        {(!hasBep20 && hasBinancePay) && (
+                            <div className="flex items-center gap-2 text-xs text-slate-400">
+                                <CreditCard className="h-4 w-4 text-primary" />
+                                <span className="font-semibold text-slate-300">Binance Pay</span>
+                            </div>
+                        )}
+
+                        {/* Payment Details */}
+                        <div className="space-y-4">
                             {paymentType === "bep20" && hasBep20 && (
-                                <div className="space-y-4">
+                                <div className="space-y-3">
                                     {config.bep20.image_url && (
-                                        <div className="flex justify-center mb-6">
-                                            <div className="p-3 bg-white rounded-2xl shadow-xl ring-4 ring-slate-800/50 relative group">
-                                                <div className="absolute inset-0 bg-primary/20 rounded-2xl blur-xl transition-opacity opacity-0 group-hover:opacity-100" />
-                                                <img src={config.bep20.image_url} alt="QR Code" className="w-36 h-36 object-contain relative z-10" />
+                                        <div className="flex justify-center mb-4">
+                                            <div className="p-2.5 sm:p-3 bg-white rounded-2xl shadow-xl ring-4 ring-slate-800/50">
+                                                <img src={config.bep20.image_url} alt="QR Code" className="w-28 h-28 sm:w-36 sm:h-36 object-contain" />
                                             </div>
                                         </div>
                                     )}
                                     <div className="space-y-2">
-                                        <Label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Recipient Address (BEP20 / BSC)</Label>
-                                        <div className="flex items-center gap-2 group relative">
-                                            <code className="flex-1 rounded-xl bg-slate-950 border border-slate-800 p-3.5 text-[13px] break-all font-mono text-slate-200 shadow-inner group-hover:border-primary/50 transition-colors">
+                                        <Label className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wider">Recipient Address (BEP20 / BSC)</Label>
+                                        <div className="flex items-center gap-2 group">
+                                            <code className="flex-1 rounded-xl bg-slate-950 border border-slate-800 p-2.5 sm:p-3.5 text-[11px] sm:text-[13px] break-all font-mono text-slate-200 shadow-inner group-hover:border-primary/50 transition-colors leading-relaxed">
                                                 {config.bep20.wallet_address}
                                             </code>
                                             <Button
                                                 variant="outline"
                                                 onClick={() => copyText(config.bep20.wallet_address, 'bep20')}
-                                                className={`shrink-0 h-auto self-stretch rounded-xl border-slate-800 hover:bg-slate-800 hover:text-white transition-all ${copiedStates['bep20'] ? 'bg-green-500/20 border-green-500/50 text-green-400 hover:bg-green-500/30' : ''}`}
+                                                className={`shrink-0 h-auto self-stretch rounded-xl border-slate-800 hover:bg-slate-800 hover:text-white transition-all min-w-[44px] ${copiedStates['bep20'] ? 'bg-green-500/20 border-green-500/50 text-green-400' : ''}`}
                                             >
-                                                {copiedStates['bep20'] ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4 text-slate-400 group-hover:text-white" />}
+                                                {copiedStates['bep20'] ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4 text-slate-400" />}
                                             </Button>
                                         </div>
+                                    </div>
+                                    {/* Warning */}
+                                    <div className="flex items-start gap-2 p-2.5 rounded-lg bg-amber-500/5 border border-amber-500/10 text-[10px] sm:text-[11px] text-amber-400/80">
+                                        <AlertCircle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                                        <span>Only send USDT on BSC (BEP20) network. Other networks = lost funds.</span>
                                     </div>
                                 </div>
                             )}
 
                             {paymentType === "binance_pay" && hasBinancePay && (
-                                <div className="space-y-4">
+                                <div className="space-y-3">
                                     {config.binance_pay.image_url && (
-                                        <div className="flex justify-center mb-6">
-                                            <div className="p-3 bg-white rounded-2xl shadow-xl ring-4 ring-slate-800/50 relative group">
-                                                <div className="absolute inset-0 bg-primary/20 rounded-2xl blur-xl transition-opacity opacity-0 group-hover:opacity-100" />
-                                                <img src={config.binance_pay.image_url} alt="Binance Pay QR" className="w-36 h-36 object-contain relative z-10" />
+                                        <div className="flex justify-center mb-4">
+                                            <div className="p-2.5 sm:p-3 bg-white rounded-2xl shadow-xl ring-4 ring-slate-800/50">
+                                                <img src={config.binance_pay.image_url} alt="Binance Pay QR" className="w-28 h-28 sm:w-36 sm:h-36 object-contain" />
                                             </div>
                                         </div>
                                     )}
                                     <div className="space-y-2">
-                                        <Label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Binance Pay ID</Label>
-                                        <div className="flex items-center gap-2 group relative">
-                                            <code className="flex-1 rounded-xl bg-slate-950 border border-slate-800 p-3.5 text-sm break-all font-mono font-bold text-center text-slate-200 shadow-inner group-hover:border-primary/50 transition-colors">
+                                        <Label className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wider">Binance Pay ID</Label>
+                                        <div className="flex items-center gap-2 group">
+                                            <code className="flex-1 rounded-xl bg-slate-950 border border-slate-800 p-2.5 sm:p-3.5 text-sm break-all font-mono font-bold text-center text-slate-200 shadow-inner group-hover:border-primary/50 transition-colors">
                                                 {config.binance_pay.pay_id}
                                             </code>
                                             <Button
                                                 variant="outline"
                                                 onClick={() => copyText(config.binance_pay.pay_id, 'binance')}
-                                                className={`shrink-0 h-auto self-stretch rounded-xl border-slate-800 hover:bg-slate-800 hover:text-white transition-all ${copiedStates['binance'] ? 'bg-green-500/20 border-green-500/50 text-green-400 hover:bg-green-500/30' : ''}`}
+                                                className={`shrink-0 h-auto self-stretch rounded-xl border-slate-800 hover:bg-slate-800 hover:text-white transition-all min-w-[44px] ${copiedStates['binance'] ? 'bg-green-500/20 border-green-500/50 text-green-400' : ''}`}
                                             >
-                                                {copiedStates['binance'] ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4 text-slate-400 group-hover:text-white" />}
+                                                {copiedStates['binance'] ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4 text-slate-400" />}
                                             </Button>
                                         </div>
                                     </div>
@@ -415,42 +427,48 @@ export default function Checkout() {
                             )}
                         </div>
 
-                        <div className="w-full h-px bg-slate-800/80 my-2" />
+                        <div className="w-full h-px bg-slate-800/60" />
 
                         {/* Error Display */}
                         {verifyResult && !verifyResult.verified && (
-                            <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 flex gap-3 animate-in fade-in slide-in-from-top-2">
-                                <AlertCircle className="h-5 w-5 text-red-400 shrink-0 mt-0.5" />
-                                <div className="text-sm text-red-200">
-                                    <p className="font-semibold text-red-400 mb-0.5">Verification Failed</p>
-                                    <p className="opacity-90 leading-relaxed">{verifyResult.error}</p>
+                            <div className="p-3 sm:p-4 rounded-xl bg-red-500/10 border border-red-500/20 space-y-2 animate-in fade-in slide-in-from-top-2">
+                                <div className="flex items-center gap-2">
+                                    <XCircle className="h-4 w-4 text-red-400 shrink-0" />
+                                    <p className="font-semibold text-red-400 text-sm">Verification Failed</p>
+                                </div>
+                                <p className="text-xs text-red-200/80 leading-relaxed">{verifyResult.error}</p>
+                                <div className="pt-1 border-t border-red-500/10 mt-2 text-[10px] text-slate-500 space-y-0.5">
+                                    <p>• Check transaction hash / order ID is correct</p>
+                                    <p>• Wait a few minutes if just sent</p>
+                                    <p>• Ensure exact amount ({amount?.toFixed(2)} USDT) was sent</p>
                                 </div>
                             </div>
                         )}
 
                         {/* Verification Input & Button */}
-                        <div className="space-y-4">
+                        <div className="space-y-3 sm:space-y-4">
                             <div className="space-y-2">
-                                <Label className="text-[11px] font-bold text-primary uppercase tracking-wider flex items-center justify-between">
+                                <Label className="text-[10px] sm:text-[11px] font-bold text-primary uppercase tracking-wider flex items-center justify-between">
                                     <span>{paymentType === "bep20" ? "Transaction Hash" : "Binance Order ID"}</span>
-                                    <span className="text-slate-500 font-normal normal-case text-[10px]">Required to verify</span>
+                                    <span className="text-slate-500 font-normal normal-case text-[9px] sm:text-[10px]">Required to verify</span>
                                 </Label>
                                 <Input
-                                    className="border-slate-700 bg-slate-950/50 h-12 text-white focus-visible:ring-primary/50 focus-visible:border-primary/50"
+                                    className="border-slate-700 bg-slate-950/50 h-11 sm:h-12 text-white text-sm focus-visible:ring-primary/50 focus-visible:border-primary/50 rounded-xl"
                                     placeholder={paymentType === "bep20" ? "Paste 0x... hash here" : "Paste Binance Pay Order ID"}
                                     value={txId}
                                     onChange={(e) => setTxId(e.target.value)}
+                                    disabled={isExpired}
                                 />
                             </div>
 
                             <Button
                                 onClick={handleVerify}
-                                disabled={verifying || !txId.trim()}
-                                className="w-full h-12 bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-lg shadow-primary/25 transition-all duration-300 text-[15px] group rounded-xl"
+                                disabled={verifying || !txId.trim() || isExpired}
+                                className="w-full h-11 sm:h-12 bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-lg shadow-primary/25 transition-all duration-300 text-sm sm:text-[15px] group rounded-xl disabled:opacity-50"
                             >
                                 {verifying ? (
                                     <span className="flex items-center gap-2">
-                                        <Loader2 className="h-5 w-5 animate-spin" /> Verifying Payment...
+                                        <Loader2 className="h-5 w-5 animate-spin" /> Verifying...
                                     </span>
                                 ) : (
                                     <span className="flex items-center justify-center gap-2">
@@ -463,7 +481,7 @@ export default function Checkout() {
                     </CardContent>
                 </Card>
 
-                <div className="flex items-center justify-center gap-2 text-xs text-slate-500">
+                <div className="flex items-center justify-center gap-2 text-[10px] sm:text-xs text-slate-500 pb-4">
                     <Shield className="h-3 w-3" />
                     <span>Protected by Binance Secure Payment Network</span>
                 </div>
