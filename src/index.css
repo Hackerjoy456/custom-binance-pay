@@ -1,0 +1,141 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 220 20% 97%;
+    --foreground: 220 20% 10%;
+    --card: 0 0% 100%;
+    --card-foreground: 220 20% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 20% 10%;
+    --primary: 45 100% 51%;
+    --primary-foreground: 220 20% 10%;
+    --secondary: 220 14% 90%;
+    --secondary-foreground: 220 20% 10%;
+    --muted: 220 14% 94%;
+    --muted-foreground: 220 10% 46%;
+    --accent: 45 100% 51%;
+    --accent-foreground: 220 20% 10%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 14% 88%;
+    --input: 220 14% 88%;
+    --ring: 45 100% 51%;
+    --radius: 0.75rem;
+    --success: 142 76% 36%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+    --primary-glow: 45 100% 60%;
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 220 20% 10%;
+    --sidebar-primary: 45 100% 51%;
+    --sidebar-primary-foreground: 220 20% 10%;
+    --sidebar-accent: 220 14% 94%;
+    --sidebar-accent-foreground: 220 20% 10%;
+    --sidebar-border: 220 14% 88%;
+    --sidebar-ring: 45 100% 51%;
+  }
+
+  .dark {
+    --background: 220 20% 7%;
+    --foreground: 220 14% 93%;
+    --card: 220 20% 10%;
+    --card-foreground: 220 14% 93%;
+    --popover: 220 20% 10%;
+    --popover-foreground: 220 14% 93%;
+    --primary: 45 100% 51%;
+    --primary-foreground: 220 20% 7%;
+    --secondary: 220 14% 16%;
+    --secondary-foreground: 220 14% 93%;
+    --muted: 220 14% 16%;
+    --muted-foreground: 220 10% 55%;
+    --accent: 45 100% 51%;
+    --accent-foreground: 220 20% 7%;
+    --destructive: 0 62% 30%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 14% 18%;
+    --input: 220 14% 18%;
+    --ring: 45 100% 51%;
+    --success: 142 76% 36%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+    --primary-glow: 45 100% 60%;
+    --sidebar-background: 220 20% 7%;
+    --sidebar-foreground: 220 14% 93%;
+    --sidebar-primary: 45 100% 51%;
+    --sidebar-primary-foreground: 220 20% 7%;
+    --sidebar-accent: 220 14% 16%;
+    --sidebar-accent-foreground: 220 14% 93%;
+    --sidebar-border: 220 14% 18%;
+    --sidebar-ring: 45 100% 51%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground dark;
+  }
+}
+
+/* Allow text selection inside form elements */
+input, textarea, select, [contenteditable="true"], code, pre {
+  user-select: text !important;
+  -webkit-user-select: text !important;
+}
+
+/* ── Glow utilities ──────────────────────────────── */
+@layer utilities {
+  .glow-primary {
+    box-shadow: 0 0 20px hsl(45 100% 51% / 0.15), 0 0 60px hsl(45 100% 51% / 0.05);
+  }
+  .glow-primary-strong {
+    box-shadow: 0 0 25px hsl(45 100% 51% / 0.25), 0 0 80px hsl(45 100% 51% / 0.1);
+  }
+  .glow-primary-intense {
+    box-shadow: 0 0 30px hsl(45 100% 51% / 0.35), 0 0 80px hsl(45 100% 51% / 0.15), 0 0 120px hsl(45 100% 51% / 0.05);
+  }
+  .glow-success {
+    box-shadow: 0 0 20px hsl(142 76% 36% / 0.15), 0 0 60px hsl(142 76% 36% / 0.05);
+  }
+  .card-glow {
+    @apply transition-all duration-500;
+  }
+  .card-glow:hover {
+    box-shadow: 0 0 30px hsl(45 100% 51% / 0.12), 0 4px 20px hsl(220 20% 7% / 0.3);
+  }
+  .gradient-primary {
+    background: linear-gradient(135deg, hsl(45 100% 51%), hsl(35 100% 45%));
+  }
+  .gradient-dark {
+    background: linear-gradient(180deg, hsl(220 20% 10%), hsl(220 20% 7%));
+  }
+  .gradient-shimmer {
+    background: linear-gradient(90deg, transparent, hsl(45 100% 51% / 0.08), transparent);
+    background-size: 200% 100%;
+  }
+  .text-glow {
+    text-shadow: 0 0 20px hsl(45 100% 51% / 0.4), 0 0 40px hsl(45 100% 51% / 0.2);
+  }
+  .text-glow-strong {
+    text-shadow: 0 0 25px hsl(45 100% 51% / 0.6), 0 0 50px hsl(45 100% 51% / 0.3), 0 0 80px hsl(45 100% 51% / 0.1);
+  }
+  .border-glow {
+    border-color: hsl(45 100% 51% / 0.3);
+  }
+  .glass-card {
+    background: hsl(220 20% 10% / 0.6);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+  .skeleton-glow {
+    background: linear-gradient(90deg, hsl(220 14% 16%) 25%, hsl(220 14% 20%) 50%, hsl(220 14% 16%) 75%);
+    background-size: 200% 100%;
+  }
+}

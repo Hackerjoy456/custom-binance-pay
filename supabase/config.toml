@@ -1,0 +1,31 @@
+project_id = "rbboilniizmrvsthcpfs"
+
+[functions.verify-payment]
+verify_jwt = false
+
+[functions.get-config]
+verify_jwt = false
+
+[functions.binance-verify-sdk]
+verify_jwt = false
+
+[functions.health]
+verify_jwt = false
+
+[functions.test-connection]
+verify_jwt = false
+
+[functions.admin-manage-user]
+verify_jwt = false
+
+[functions.clear-used-transactions]
+verify_jwt = false
+
+[functions.verify-subscription-payment]
+verify_jwt = false
+
+[functions.public-get-config]
+verify_jwt = false
+
+[functions.public-verify-payment]
+verify_jwt = false

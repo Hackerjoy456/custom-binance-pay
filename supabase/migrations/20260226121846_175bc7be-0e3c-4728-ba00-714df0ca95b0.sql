@@ -1,0 +1,1 @@
+ALTER TABLE api_configurations ADD COLUMN bep20_image_url text DEFAULT '';

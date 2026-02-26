@@ -1,0 +1,1 @@
+ALTER TABLE public.api_configurations ADD COLUMN IF NOT EXISTS custom_endpoint_url text DEFAULT null;
