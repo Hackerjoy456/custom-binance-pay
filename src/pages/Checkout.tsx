@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,9 +6,10 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Loader2, Copy, CheckCircle, Wallet, CreditCard, Shield, XCircle, AlertCircle, ArrowRight, Check } from "lucide-react";
+import { Loader2, Copy, CheckCircle, Wallet, CreditCard, Shield, XCircle, AlertCircle, ArrowRight, Check, Clock, TimerOff } from "lucide-react";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SESSION_DURATION_MS = 10 * 60 * 1000; // 10 minutes
 
 export default function Checkout() {
     const { merchantId } = useParams();
@@ -16,8 +17,9 @@ export default function Checkout() {
     const amountParam = searchParams.get("amount");
     const orderId = searchParams.get("orderId");
     const successUrl = searchParams.get("successUrl");
+    const tsParam = searchParams.get("ts");
 
-    const [amount, setAmount] = useState<number | null>(amountParam ? parseFloat(amountParam) : null);
+    const [amount] = useState<number | null>(amountParam ? parseFloat(amountParam) : null);
     const [config, setConfig] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -29,44 +31,62 @@ export default function Checkout() {
     const [verifyResult, setVerifyResult] = useState<any>(null);
     const [copiedStates, setCopiedStates] = useState<Record<string, boolean>>({});
 
-    useEffect(() => {
-        if (!merchantId) {
-            setError("Invalid checkout URL. Merchant ID missing.");
-            setLoading(false);
-            return;
-        }
+    // ─── Countdown Timer ───
+    const sessionStart = tsParam ? parseInt(tsParam) : Date.now();
+    const [timeLeft, setTimeLeft] = useState<number>(() => {
+        const remaining = (sessionStart + SESSION_DURATION_MS) - Date.now();
+        return Math.max(0, remaining);
+    });
+    const isExpired = timeLeft <= 0;
 
-        if (!amount || isNaN(amount) || amount <= 0) {
-            setError("Invalid payment amount specified.");
-            setLoading(false);
-            return;
-        }
+    useEffect(() => {
+        if (isExpired || success) return;
+        const interval = setInterval(() => {
+            const remaining = (sessionStart + SESSION_DURATION_MS) - Date.now();
+            if (remaining <= 0) {
+                setTimeLeft(0);
+                clearInterval(interval);
+            } else {
+                setTimeLeft(remaining);
+            }
+        }, 1000);
+        return () => clearInterval(interval);
+    }, [sessionStart, isExpired, success]);
+
+    const formatTime = (ms: number) => {
+        const totalSec = Math.floor(ms / 1000);
+        const min = Math.floor(totalSec / 60);
+        const sec = totalSec % 60;
+        return `${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
+    };
+
+    const timerPercent = Math.max(0, (timeLeft / SESSION_DURATION_MS) * 100);
+    const isUrgent = timeLeft < 2 * 60 * 1000; // less than 2 min
+
+    useEffect(() => {
+        if (!merchantId) { setError("Invalid checkout URL. Merchant ID missing."); setLoading(false); return; }
+        if (!amount || isNaN(amount) || amount <= 0) { setError("Invalid payment amount specified."); setLoading(false); return; }
+
+        // Check if already expired on load
+        if (isExpired) { setLoading(false); return; }
 
         const loadConfig = async () => {
             try {
                 const res = await fetch(`${SUPABASE_URL}/functions/v1/public-get-config?merchant_id=${merchantId}`);
                 const data = await res.json();
-
                 if (data.error) throw new Error(data.error);
-
                 setConfig(data);
-
-                if (data.bep20?.wallet_address) {
-                    setPaymentType("bep20");
-                } else if (data.binance_pay?.pay_id) {
-                    setPaymentType("binance_pay");
-                } else {
-                    throw new Error("Merchant has no active payment methods.");
-                }
+                if (data.bep20?.wallet_address) setPaymentType("bep20");
+                else if (data.binance_pay?.pay_id) setPaymentType("binance_pay");
+                else throw new Error("Merchant has no active payment methods.");
             } catch (e: any) {
                 setError(e.message || "Failed to load merchant configuration.");
             } finally {
                 setLoading(false);
             }
         };
-
         loadConfig();
-    }, [merchantId, amount]);
+    }, [merchantId, amount, isExpired]);
 
     const copyText = (text: string, id: string) => {
         navigator.clipboard.writeText(text);
@@ -76,6 +96,7 @@ export default function Checkout() {
     };
 
     const handleVerify = async () => {
+        if (isExpired) { toast.error("Session expired. Please request a new payment link."); return; }
         if (!txId.trim()) { toast.error("Please enter a transaction ID"); return; }
         if (!amount) return;
 
@@ -90,7 +111,8 @@ export default function Checkout() {
                     transaction_id: txId.trim(),
                     payment_type: paymentType,
                     expected_amount: amount,
-                    order_id: orderId, // Passing order ID to the webhook if configured
+                    order_id: orderId,
+                    session_ts: sessionStart, // Send timestamp for server-side validation
                 }),
             });
             const data = await res.json();
@@ -100,9 +122,7 @@ export default function Checkout() {
                 toast.success("Payment verified successfully! 🎉");
                 setSuccess(true);
                 if (successUrl) {
-                    setTimeout(() => {
-                        window.location.href = successUrl;
-                    }, 3000);
+                    setTimeout(() => { window.location.href = successUrl; }, 3000);
                 }
             } else {
                 toast.error(data.error || "Verification failed. Check your transaction details.");
@@ -140,6 +160,39 @@ export default function Checkout() {
                         <div className="space-y-2">
                             <h2 className="text-2xl font-bold text-white">Checkout Unavailable</h2>
                             <p className="text-slate-400 text-sm">{error || "Configuration not found"}</p>
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+        );
+    }
+
+    // ─── Expired State ───
+    if (isExpired && !success) {
+        return (
+            <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4 relative overflow-hidden">
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(239,68,68,0.05)_0%,transparent_50%)]" />
+                <Card className="w-full max-w-md border-red-500/20 bg-slate-900/80 backdrop-blur-xl shadow-2xl z-10 relative overflow-hidden">
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-500 to-orange-500" />
+                    <CardContent className="pt-10 pb-8 text-center space-y-6">
+                        <div className="relative">
+                            <div className="h-20 w-20 mx-auto rounded-full bg-red-500/10 flex items-center justify-center ring-2 ring-red-500/20">
+                                <TimerOff className="h-10 w-10 text-red-400" />
+                            </div>
+                        </div>
+                        <div className="space-y-2">
+                            <h2 className="text-2xl font-bold text-white">Session Expired</h2>
+                            <p className="text-slate-400 text-sm max-w-xs mx-auto">
+                                This payment session has expired after 10 minutes for security reasons.
+                            </p>
+                        </div>
+                        <div className="bg-slate-950/50 rounded-xl p-4 border border-slate-800/50 space-y-2 text-left">
+                            <p className="text-xs font-semibold text-slate-300">What to do:</p>
+                            <ul className="text-xs text-slate-400 space-y-1.5 ml-1">
+                                <li className="flex gap-2"><span className="text-red-400">•</span> Request a new payment link from the merchant</li>
+                                <li className="flex gap-2"><span className="text-red-400">•</span> If you already sent payment, contact the merchant directly</li>
+                                <li className="flex gap-2"><span className="text-red-400">•</span> Each link is valid for 10 minutes only</li>
+                            </ul>
                         </div>
                     </CardContent>
                 </Card>
@@ -225,7 +278,30 @@ export default function Checkout() {
                     <h1 className="text-3xl md:text-4xl font-extrabold text-white tracking-tight">
                         Complete Order
                     </h1>
-                    <p className="text-slate-400 text-sm">Send the exact amount below to proceed</p>
+                     <p className="text-slate-400 text-sm">Send the exact amount below to proceed</p>
+
+                    {/* Countdown Timer */}
+                    <div className="mt-3">
+                        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border bg-slate-900/80 backdrop-blur-sm text-xs font-mono font-bold"
+                            style={{
+                                borderColor: isUrgent ? 'rgba(239,68,68,0.4)' : 'rgba(148,163,184,0.2)',
+                                color: isUrgent ? '#f87171' : '#94a3b8',
+                            }}
+                        >
+                            <Clock className={`h-3.5 w-3.5 ${isUrgent ? 'animate-pulse' : ''}`} />
+                            <span>{formatTime(timeLeft)}</span>
+                        </div>
+                        {/* Progress bar */}
+                        <div className="mt-2 mx-auto w-32 h-1 rounded-full bg-slate-800 overflow-hidden">
+                            <div
+                                className="h-full rounded-full transition-all duration-1000 ease-linear"
+                                style={{
+                                    width: `${timerPercent}%`,
+                                    backgroundColor: isUrgent ? '#ef4444' : 'hsl(var(--primary))',
+                                }}
+                            />
+                        </div>
+                    </div>
                 </div>
 
                 {/* Main Payment Card */}

@@ -143,11 +143,20 @@ Deno.serve(async (req) => {
     .from("api_configurations").select("*").eq("user_id", userId).single();
   if (!config) return json({ error: "Merchant payment not configured." }, 400);
 
-  const { transaction_id, payment_type, expected_amount } = body;
+  const { transaction_id, payment_type, expected_amount, session_ts } = body;
   if (!transaction_id || !payment_type || expected_amount === undefined)
     return json({ error: "Missing: transaction_id, payment_type, expected_amount" }, 400);
   if (!["bep20", "binance_pay"].includes(payment_type))
     return json({ error: "payment_type must be 'bep20' or 'binance_pay'" }, 400);
+
+  // Server-side session expiry check (10 minutes)
+  if (session_ts) {
+    const sessionAge = Date.now() - Number(session_ts);
+    const SESSION_LIMIT_MS = 10 * 60 * 1000; // 10 minutes
+    if (sessionAge > SESSION_LIMIT_MS) {
+      return json({ error: "Payment session expired. Please request a new payment link.", verified: false }, 403);
+    }
+  }
 
   const { data: existingTx } = await supabaseAdmin
     .from("used_transactions").select("id").eq("user_id", userId).eq("transaction_id", transaction_id).limit(1);
