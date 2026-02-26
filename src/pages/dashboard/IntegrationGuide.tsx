@@ -121,7 +121,7 @@ export default function IntegrationGuide() {
   const sdkUrl = `https://${projectId}.supabase.co/functions/v1/binance-verify-sdk`;
   const displayKey = apiKey || "YOUR_API_KEY";
   const publishedDomain = "https://binancepayment.offlinee.online";
-  const checkoutUrl = user ? `${publishedDomain}/pay/${user.id}?amount=25.00&orderId=ORDER_12345` : `${publishedDomain}/pay/YOUR_MERCHANT_ID?amount=25.00`;
+  const checkoutUrl = user ? `${publishedDomain}/pay/${user.id}?amount=25.00&orderId=ORDER_12345&ts=${Date.now()}` : `${publishedDomain}/pay/YOUR_MERCHANT_ID?amount=25.00&ts=TIMESTAMP_MS`;
 
   /* ─── Code Snippets ─── */
 
@@ -628,6 +628,7 @@ export default {
                 <li><code className="bg-muted px-1 rounded">amount</code> — Amount in USDT (required)</li>
                 <li><code className="bg-muted px-1 rounded">orderId</code> — Your order reference (optional, shown to customer)</li>
                 <li><code className="bg-muted px-1 rounded">successUrl</code> — Redirect URL after successful payment (optional)</li>
+                <li><code className="bg-muted px-1 rounded">ts</code> — Session timestamp in milliseconds, e.g. <code className="bg-muted px-1 rounded">Date.now()</code> (required for 10-min expiry)</li>
               </ul>
             </InfoBox>
 
