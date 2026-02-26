@@ -120,7 +120,8 @@ export default function IntegrationGuide() {
   const configEndpoint = `https://${projectId}.supabase.co/functions/v1/get-config`;
   const sdkUrl = `https://${projectId}.supabase.co/functions/v1/binance-verify-sdk`;
   const displayKey = apiKey || "YOUR_API_KEY";
-  const checkoutUrl = user ? `${window.location.origin}/pay/${user.id}?amount=25.00&orderId=ORDER_12345` : `${window.location.origin}/pay/YOUR_MERCHANT_ID?amount=25.00`;
+  const publishedDomain = "https://easy-access-api.lovable.app";
+  const checkoutUrl = user ? `${publishedDomain}/pay/${user.id}?amount=25.00&orderId=ORDER_12345` : `${publishedDomain}/pay/YOUR_MERCHANT_ID?amount=25.00`;
 
   /* ─── Code Snippets ─── */
 
@@ -621,8 +622,25 @@ export default {
           </CardHeader>
           <CardContent>
             <CodeBlock code={checkoutUrl} language="url" title="Payment Link" />
+            
+            <InfoBox icon={Info} title="URL Parameters" variant="info">
+              <ul className="space-y-1 text-xs">
+                <li><code className="bg-muted px-1 rounded">amount</code> — Amount in USDT (required)</li>
+                <li><code className="bg-muted px-1 rounded">orderId</code> — Your order reference (optional, shown to customer)</li>
+                <li><code className="bg-muted px-1 rounded">successUrl</code> — Redirect URL after successful payment (optional)</li>
+              </ul>
+            </InfoBox>
+
+            <InfoBox icon={Lightbulb} title="Custom Domain" variant="success">
+              <p>Want a branded URL like <code className="bg-muted px-1 rounded text-xs">pay.yourbusiness.com</code>? Go to <strong>Settings → Domains</strong> to connect your own domain for a professional checkout experience.</p>
+            </InfoBox>
+
             <div className="mt-4 pt-4 border-t border-border flex flex-col gap-2 text-sm text-muted-foreground">
-              <p>You can optionally set up a webhook URL in the <strong>API Config</strong> tab to automatically receive a backend notification when the payment is verified.</p>
+              <p><strong>After verification:</strong></p>
+              <ul className="space-y-1 text-xs ml-2">
+                <li>✅ <strong>Success</strong> — Customer sees a confirmation screen with amount & order details. If <code>successUrl</code> is set, they auto-redirect.</li>
+                <li>❌ <strong>Failed</strong> — Customer sees the error reason (wrong amount, TX not found, etc.) with troubleshooting tips and can retry.</li>
+              </ul>
             </div>
             <Button variant="outline" className="mt-4 gap-2" asChild>
               <a href={checkoutUrl} target="_blank" rel="noreferrer">
