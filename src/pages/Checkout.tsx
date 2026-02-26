@@ -6,15 +6,15 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Loader2, Copy, CheckCircle, Wallet, CreditCard, Shield } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { Loader2, Copy, CheckCircle, Wallet, CreditCard, Shield, XCircle } from "lucide-react";
+
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 
 export default function Checkout() {
     const { merchantId } = useParams();
     const [searchParams] = useSearchParams();
     const amountParam = searchParams.get("amount");
     const orderId = searchParams.get("orderId");
-    const webhookUrl = searchParams.get("webhookUrl"); // Just for reference
     const successUrl = searchParams.get("successUrl");
 
     const [amount, setAmount] = useState<number | null>(amountParam ? parseFloat(amountParam) : null);
@@ -26,6 +26,7 @@ export default function Checkout() {
     const [txId, setTxId] = useState("");
     const [verifying, setVerifying] = useState(false);
     const [success, setSuccess] = useState(false);
+    const [verifyResult, setVerifyResult] = useState<any>(null);
 
     useEffect(() => {
         if (!merchantId) {
@@ -42,16 +43,13 @@ export default function Checkout() {
 
         const loadConfig = async () => {
             try {
-                const { data, error } = await supabase.functions.invoke("public-get-config", {
-                    body: { merchant_id: merchantId },
-                });
+                const res = await fetch(`${SUPABASE_URL}/functions/v1/public-get-config?merchant_id=${merchantId}`);
+                const data = await res.json();
 
-                if (error) throw error;
-                if (data?.error) throw new Error(data.error);
+                if (data.error) throw new Error(data.error);
 
                 setConfig(data);
 
-                // Auto-select payment method
                 if (data.bep20?.wallet_address) {
                     setPaymentType("bep20");
                 } else if (data.binance_pay?.pay_id) {
@@ -79,26 +77,22 @@ export default function Checkout() {
         if (!amount) return;
 
         setVerifying(true);
+        setVerifyResult(null);
         try {
-            const { data, error } = await supabase.functions.invoke("public-verify-payment", {
-                body: {
+            const res = await fetch(`${SUPABASE_URL}/functions/v1/public-verify-payment`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
                     merchant_id: merchantId,
                     transaction_id: txId.trim(),
                     payment_type: paymentType,
                     expected_amount: amount,
-                    order_id: orderId,
-                },
+                }),
             });
+            const data = await res.json();
+            setVerifyResult(data);
 
-            if (error) {
-                let errMsg = "Verification failed";
-                try {
-                    const errBody = await (error as any).context?.json?.();
-                    if (errBody?.error) errMsg = errBody.error;
-                } catch { /* fallback */ }
-                if (errMsg === "Verification failed") errMsg = error.message || errMsg;
-                toast.error(errMsg);
-            } else if (data?.verified) {
+            if (data.verified) {
                 toast.success("Payment verified successfully! 🎉");
                 setSuccess(true);
                 if (successUrl) {
@@ -107,7 +101,7 @@ export default function Checkout() {
                     }, 3000);
                 }
             } else {
-                toast.error(data?.error || "Verification failed. Check your transaction details.");
+                toast.error(data.error || "Verification failed. Check your transaction details.");
             }
         } catch (e: any) {
             toast.error(e.message || "An unexpected error occurred.");
@@ -129,11 +123,14 @@ export default function Checkout() {
     if (error || !config) {
         return (
             <div className="min-h-screen bg-background flex items-center justify-center p-4">
-                <Card className="w-full max-w-md border-destructive/20 card-glow">
-                    <CardHeader className="text-center">
-                        <CardTitle className="text-destructive">Checkout Unavailable</CardTitle>
-                        <CardDescription>{error || "Configuration not found"}</CardDescription>
-                    </CardHeader>
+                <Card className="w-full max-w-md border-destructive/20">
+                    <CardContent className="pt-8 pb-6 text-center space-y-4">
+                        <div className="h-16 w-16 mx-auto rounded-full bg-destructive/10 flex items-center justify-center">
+                            <XCircle className="h-8 w-8 text-destructive" />
+                        </div>
+                        <h2 className="text-xl font-bold">Checkout Unavailable</h2>
+                        <p className="text-muted-foreground text-sm">{error || "Configuration not found"}</p>
+                    </CardContent>
                 </Card>
             </div>
         );
@@ -142,14 +139,16 @@ export default function Checkout() {
     if (success) {
         return (
             <div className="min-h-screen bg-background flex items-center justify-center p-4">
-                <Card className="w-full max-w-md border-success/30 glow-success text-center py-10">
+                <Card className="w-full max-w-md border-primary/30 shadow-xl text-center py-10">
                     <CardContent className="space-y-6 flex flex-col items-center justify-center">
-                        <div className="h-20 w-20 rounded-full bg-success/20 flex items-center justify-center animate-bounce">
-                            <CheckCircle className="h-10 w-10 text-success" />
+                        <div className="h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center animate-bounce">
+                            <CheckCircle className="h-10 w-10 text-primary" />
                         </div>
                         <div className="space-y-2">
                             <h2 className="text-2xl font-bold text-foreground">Payment Successful!</h2>
-                            <p className="text-muted-foreground">Your transaction has been verified.</p>
+                            <p className="text-muted-foreground">
+                                Amount: <span className="font-bold text-foreground">${verifyResult?.amount} USDT</span>
+                            </p>
                             {successUrl && (
                                 <p className="text-sm text-muted-foreground mt-4 animate-pulse">
                                     Redirecting back to merchant...
@@ -167,7 +166,7 @@ export default function Checkout() {
 
     return (
         <div className="min-h-screen bg-background flex flex-col items-center py-12 px-4 relative overflow-hidden">
-            {/* Glow Orbs */}
+            {/* Background orbs */}
             <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[100px] pointer-events-none" />
             <div className="absolute bottom-1/4 right-0 w-[400px] h-[400px] bg-primary/5 rounded-full blur-[80px] pointer-events-none" />
 
@@ -181,13 +180,13 @@ export default function Checkout() {
                     <p className="text-muted-foreground">Send exact amount to complete your order</p>
                 </div>
 
-                <Card className="border-primary/20 shadow-2xl shadow-primary/5 card-glow relative overflow-hidden">
-                    <div className="absolute top-0 left-0 right-0 h-1 gradient-primary" />
+                <Card className="border-primary/20 shadow-2xl shadow-primary/5 relative overflow-hidden">
+                    <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary to-primary/50" />
 
                     <CardHeader className="bg-muted/30 border-b border-border/50 text-center pb-8 pt-8">
                         <CardDescription className="text-xs uppercase tracking-wider font-bold mb-1">Total to Pay</CardDescription>
                         <div className="flex items-center justify-center gap-2">
-                            <span className="text-5xl font-black text-primary text-glow-strong tracking-tighter">
+                            <span className="text-5xl font-black text-primary tracking-tighter">
                                 ${amount?.toFixed(2)}
                             </span>
                             <span className="text-xl font-bold text-muted-foreground mt-2">USDT</span>
@@ -200,6 +199,7 @@ export default function Checkout() {
                     </CardHeader>
 
                     <CardContent className="p-6 space-y-6">
+                        {/* Payment method tabs */}
                         <div className="flex bg-muted/50 p-1 rounded-lg">
                             {hasBep20 && (
                                 <button
@@ -219,6 +219,7 @@ export default function Checkout() {
                             )}
                         </div>
 
+                        {/* Payment details */}
                         <div className="space-y-4">
                             {paymentType === "bep20" && hasBep20 && (
                                 <div className="space-y-3">
@@ -261,6 +262,7 @@ export default function Checkout() {
 
                         <div className="w-full h-px bg-border/50 my-6" />
 
+                        {/* Verify section */}
                         <div className="space-y-3">
                             <Label className="text-xs font-semibold uppercase text-primary">
                                 {paymentType === "bep20" ? "Transaction Hash" : "Binance Order ID"}
@@ -271,10 +273,17 @@ export default function Checkout() {
                                 value={txId}
                                 onChange={(e) => setTxId(e.target.value)}
                             />
+
+                            {verifyResult && !verifyResult.verified && (
+                                <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-sm text-destructive">
+                                    {verifyResult.error}
+                                </div>
+                            )}
+
                             <Button
                                 onClick={handleVerify}
                                 disabled={verifying || !txId.trim()}
-                                className="w-full h-12 glow-primary font-bold transition-all text-[15px] mt-2 group"
+                                className="w-full h-12 font-bold transition-all text-[15px] mt-2 group"
                             >
                                 {verifying ? (
                                     <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Verifying...</>
@@ -287,7 +296,7 @@ export default function Checkout() {
                 </Card>
 
                 <p className="text-center text-xs text-muted-foreground opacity-70">
-                    Powered by Binance Payment Gateway
+                    Powered by Secure Payment Gateway
                 </p>
             </div>
         </div>
