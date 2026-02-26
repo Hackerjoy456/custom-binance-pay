@@ -172,7 +172,7 @@ export default function AdminUsers() {
       if (!res.ok) {
         throw new Error(data?.error || "Action failed");
       }
-      toast.success(data.message || `User ${confirmDialog.action}ned successfully`);
+      toast.success(data.message || `User ${confirmDialog.action} successfully`);
     } catch (e: any) {
       toast.error(safeError(e, `Failed to ${confirmDialog.action} user`));
     }
@@ -231,7 +231,9 @@ export default function AdminUsers() {
                     <TableCell><Badge variant="outline" className="capitalize">{sub?.plan_type || "None"}</Badge></TableCell>
                     <TableCell className="text-sm">{sub ? format(new Date(sub.expires_at), "MMM d, yyyy") : "—"}</TableCell>
                     <TableCell>
-                      <Badge className={sub ? "bg-green-600" : "bg-destructive"}>{sub ? "Active" : "Inactive"}</Badge>
+                      <Badge className={p.is_banned ? "bg-black" : (sub ? "bg-green-600" : "bg-destructive")}>
+                        {p.is_banned ? "Banned" : (sub ? "Active" : "Inactive")}
+                      </Badge>
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-1 flex-wrap">
@@ -255,8 +257,8 @@ export default function AdminUsers() {
                         {!isSelf(p.user_id) && (
                           <>
                             {isSuperAdmin && (
-                              <Button variant="ghost" size="sm" onClick={() => setConfirmDialog({ userId: p.user_id, email: p.email, action: "ban" })}>
-                                <Ban className="h-3 w-3 mr-1 text-warning" /> Ban
+                              <Button variant="ghost" size="sm" onClick={() => setConfirmDialog({ userId: p.user_id, email: p.email, action: p.is_banned ? "unban" : "ban" })}>
+                                {p.is_banned ? <><UserCheck className="h-3 w-3 mr-1 text-green-600" /> Unban</> : <><Ban className="h-3 w-3 mr-1 text-warning" /> Ban</>}
                               </Button>
                             )}
                             <Button variant="ghost" size="sm" onClick={() => setConfirmDialog({ userId: p.user_id, email: p.email, action: "delete" })}>
@@ -326,19 +328,21 @@ export default function AdminUsers() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="capitalize flex items-center gap-2">
-              {confirmDialog?.action === "ban" ? <Ban className="h-5 w-5 text-warning" /> : <UserX className="h-5 w-5 text-destructive" />}
-              {confirmDialog?.action === "ban" ? "Ban User" : "Delete User"}
+              {confirmDialog?.action === "ban" ? <Ban className="h-5 w-5 text-warning" /> : (confirmDialog?.action === "unban" ? <UserCheck className="h-5 w-5 text-green-600" /> : <UserX className="h-5 w-5 text-destructive" />)}
+              {confirmDialog?.action === "ban" ? "Ban User" : (confirmDialog?.action === "unban" ? "Unban User" : "Delete User")}
             </DialogTitle>
             <DialogDescription>
               {confirmDialog?.action === "ban"
                 ? `Are you sure you want to ban ${confirmDialog?.email}? They will be unable to log in, and their subscription & API keys will be revoked.`
-                : `Are you sure you want to permanently delete ${confirmDialog?.email}? This will remove ALL their data including subscriptions, API keys, logs, and their account. This cannot be undone.`}
+                : confirmDialog?.action === "unban"
+                  ? `Are you sure you want to unban ${confirmDialog?.email}? They will be able to log in again.`
+                  : `Are you sure you want to permanently delete ${confirmDialog?.email}? This will remove ALL their data including subscriptions, API keys, logs, and their account. This cannot be undone.`}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setConfirmDialog(null)} disabled={actionLoading}>Cancel</Button>
-            <Button variant="destructive" onClick={handleUserAction} disabled={actionLoading}>
-              {actionLoading ? "Processing..." : confirmDialog?.action === "ban" ? "Ban User" : "Delete User"}
+            <Button variant={confirmDialog?.action === "unban" ? "default" : "destructive"} onClick={handleUserAction} disabled={actionLoading}>
+              {actionLoading ? "Processing..." : confirmDialog?.action === "ban" ? "Ban User" : (confirmDialog?.action === "unban" ? "Unban User" : "Delete User")}
             </Button>
           </DialogFooter>
         </DialogContent>

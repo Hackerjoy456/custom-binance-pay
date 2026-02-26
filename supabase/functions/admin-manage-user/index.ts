@@ -22,7 +22,7 @@ Deno.serve(async (req) => {
   }
 
   // Verify caller is authenticated admin
-  const authHeader = req.headers.get("authorization");
+  const authHeader = req.headers.get("Authorization") || req.headers.get("authorization");
   if (!authHeader) {
     return json({ error: "Not authenticated" }, 401);
   }
@@ -35,7 +35,7 @@ Deno.serve(async (req) => {
   const supabaseUser = createClient(
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_ANON_KEY")!,
-    { global: { headers: { authorization: authHeader } } }
+    { global: { headers: { Authorization: authHeader } } }
   );
 
   // Get caller
@@ -78,12 +78,17 @@ Deno.serve(async (req) => {
         supabaseAdmin.from("api_keys").update({ is_active: false }).eq("user_id", target_user_id),
         supabaseAdmin.from("subscriptions").update({ status: "cancelled" as any }).eq("user_id", target_user_id).eq("status", "active"),
         supabaseAdmin.from("user_roles").delete().eq("user_id", target_user_id).eq("role", "admin"),
+        supabaseAdmin.from("profiles").update({ is_banned: true }).eq("user_id", target_user_id),
       ]);
 
       // Ban in auth (set ban_duration)
       const { error } = await supabaseAdmin.auth.admin.updateUserById(target_user_id, {
         ban_duration: "876000h", // ~100 years
       });
+
+      // Force sign out
+      await supabaseAdmin.auth.admin.signOut(target_user_id);
+
       if (error) {
         return json({ error: "Failed to ban user: " + error.message }, 500);
       }
@@ -95,6 +100,7 @@ Deno.serve(async (req) => {
       const { error } = await supabaseAdmin.auth.admin.updateUserById(target_user_id, {
         ban_duration: "none",
       });
+      await supabaseAdmin.from("profiles").update({ is_banned: false }).eq("user_id", target_user_id);
       if (error) {
         return json({ error: "Failed to unban user: " + error.message }, 500);
       }
