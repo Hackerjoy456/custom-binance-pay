@@ -60,7 +60,7 @@ export default function ApiConfig() {
     if (JSON.stringify(config) === JSON.stringify(lastSavedConfig)) return;
 
     const timer = setTimeout(() => {
-      handleSave(true); // Silent save
+      handleSave(); // Show toast on auto-save as requested by user
     }, 1200);
 
     return () => clearTimeout(timer);
@@ -84,7 +84,7 @@ export default function ApiConfig() {
       toast.error(safeError(error, "Failed to save configuration"));
     } else {
       setLastSavedConfig(config);
-      if (!silent) toast.success("Configuration saved!");
+      toast.success("Configuration auto-saved!");
     }
     setSaving(false);
   };
@@ -301,7 +301,7 @@ export default function ApiConfig() {
       </Card>
 
       <div className="flex items-center gap-4">
-        <Button onClick={() => handleSave(false)} disabled={saving} size="lg" className="glow-primary">
+        <Button onClick={() => handleSave()} disabled={saving} size="lg" className="glow-primary">
           <Save className="mr-2 h-4 w-4" /> {saving ? "Saving..." : "Save Configuration"}
         </Button>
         {saving && <span className="text-sm text-muted-foreground animate-pulse">Auto-saving...</span>}
