@@ -120,7 +120,7 @@ export default function IntegrationGuide() {
   const configEndpoint = `https://${projectId}.supabase.co/functions/v1/get-config`;
   const sdkUrl = `https://${projectId}.supabase.co/functions/v1/binance-verify-sdk`;
   const displayKey = apiKey || "YOUR_API_KEY";
-  const publishedDomain = "https://binancepayment.offlinee.online";
+  const publishedDomain = "https://payment.offlinee.online";
   const checkoutUrl = user ? `${publishedDomain}/pay/${user.id}?amount=25.00&orderId=ORDER_12345&ts=${Date.now()}` : `${publishedDomain}/pay/YOUR_MERCHANT_ID?amount=25.00&ts=TIMESTAMP_MS`;
 
   /* ─── Code Snippets ─── */
@@ -622,7 +622,7 @@ export default {
           </CardHeader>
           <CardContent>
             <CodeBlock code={checkoutUrl} language="url" title="Payment Link" />
-            
+
             <InfoBox icon={Info} title="URL Parameters" variant="info">
               <ul className="space-y-1 text-xs">
                 <li><code className="bg-muted px-1 rounded">amount</code> — Amount in USDT (required)</li>
@@ -637,7 +637,7 @@ export default {
               <div className="space-y-2">
                 <p className="text-xs font-semibold">Example: Your website is <code className="bg-muted px-1 rounded">hadbib.xyz</code></p>
                 <div className="bg-muted/50 rounded-md p-3 text-xs font-mono break-all leading-relaxed">
-                  {publishedDomain}/pay/{user?.id || 'YOUR_ID'}?amount=10.00&orderId=ORDER_1&ts={'{'}Date.now(){'}'}<br/>
+                  {publishedDomain}/pay/{user?.id || 'YOUR_ID'}?amount=10.00&orderId=ORDER_1&ts={'{'}Date.now(){'}'}<br />
                   <span className="text-primary font-bold">&successUrl=https://hadbib.xyz/thank-you</span>
                 </div>
                 <ul className="space-y-1.5 text-xs mt-2">
