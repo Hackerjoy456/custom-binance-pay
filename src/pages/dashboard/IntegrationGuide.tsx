@@ -627,9 +627,27 @@ export default {
               <ul className="space-y-1 text-xs">
                 <li><code className="bg-muted px-1 rounded">amount</code> — Amount in USDT (required)</li>
                 <li><code className="bg-muted px-1 rounded">orderId</code> — Your order reference (optional, shown to customer)</li>
-                <li><code className="bg-muted px-1 rounded">successUrl</code> — Redirect URL after successful payment (optional)</li>
+                <li><code className="bg-muted px-1 rounded">successUrl</code> — Where to send the customer after successful payment (optional, see example below)</li>
                 <li><code className="bg-muted px-1 rounded">ts</code> — Session timestamp in milliseconds, e.g. <code className="bg-muted px-1 rounded">Date.now()</code> (required for 10-min expiry)</li>
               </ul>
+            </InfoBox>
+
+            <InfoBox icon={ArrowRight} title="How successUrl works" variant="success">
+              <p className="mb-2">The <code className="bg-muted px-1 rounded text-xs">successUrl</code> parameter tells the checkout page <strong>where to redirect your customer</strong> after their payment is verified successfully.</p>
+              <div className="space-y-2">
+                <p className="text-xs font-semibold">Example: Your website is <code className="bg-muted px-1 rounded">hadbib.xyz</code></p>
+                <div className="bg-muted/50 rounded-md p-3 text-xs font-mono break-all leading-relaxed">
+                  {publishedDomain}/pay/{user?.id || 'YOUR_ID'}?amount=10.00&orderId=ORDER_1&ts={'{'}Date.now(){'}'}<br/>
+                  <span className="text-primary font-bold">&successUrl=https://hadbib.xyz/thank-you</span>
+                </div>
+                <ul className="space-y-1.5 text-xs mt-2">
+                  <li>1️⃣ Customer opens the checkout link on your website</li>
+                  <li>2️⃣ Customer pays and enters their transaction ID</li>
+                  <li>3️⃣ Payment is verified → green ✅ success screen shows for 3 seconds</li>
+                  <li>4️⃣ Customer is <strong>automatically redirected</strong> to <code className="bg-muted px-1 rounded">https://hadbib.xyz/thank-you</code></li>
+                </ul>
+                <p className="text-xs mt-2 opacity-70">💡 If you don't include <code className="bg-muted px-1 rounded">successUrl</code>, the customer just stays on the success screen — no redirect.</p>
+              </div>
             </InfoBox>
 
             <InfoBox icon={Lightbulb} title="Custom Domain" variant="success">
