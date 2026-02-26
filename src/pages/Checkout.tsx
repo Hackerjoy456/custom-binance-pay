@@ -29,6 +29,7 @@ export default function Checkout() {
     const [verifying, setVerifying] = useState(false);
     const [success, setSuccess] = useState(false);
     const [verifyResult, setVerifyResult] = useState<any>(null);
+    const [lastVerifiedTxId, setLastVerifiedTxId] = useState("");
     const [copiedStates, setCopiedStates] = useState<Record<string, boolean>>({});
 
     // ─── Countdown Timer ───
@@ -102,6 +103,7 @@ export default function Checkout() {
 
         setVerifying(true);
         setVerifyResult(null);
+        setLastVerifiedTxId(currentTxId.trim());
         try {
             const res = await fetch(`${SUPABASE_URL}/functions/v1/public-verify-payment`, {
                 method: "POST",
@@ -144,13 +146,14 @@ export default function Checkout() {
 
         const trimmed = txId.trim();
         // If it looks like a hash or ID, wait a moment then auto verify
-        if (trimmed.length > 15) {
+        // Only auto-verify once per unique input to prevent infinite loops if they leave the failed text in the box
+        if (trimmed.length > 15 && trimmed !== lastVerifiedTxId) {
             const timer = setTimeout(() => {
                 runVerification(trimmed);
             }, 800);
             return () => clearTimeout(timer);
         }
-    }, [txId, verifying, isExpired, success, amount]); // Run when txId changes
+    }, [txId, verifying, isExpired, success, amount, lastVerifiedTxId]); // Run when dependencies change
 
     if (loading) {
         return (
