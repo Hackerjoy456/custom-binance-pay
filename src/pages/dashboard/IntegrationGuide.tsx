@@ -120,7 +120,7 @@ export default function IntegrationGuide() {
   const configEndpoint = `https://${projectId}.supabase.co/functions/v1/get-config`;
   const sdkUrl = `https://${projectId}.supabase.co/functions/v1/binance-verify-sdk`;
   const displayKey = apiKey || "YOUR_API_KEY";
-  const publishedDomain = "https://easy-access-api.lovable.app";
+  const publishedDomain = "https://binancepayment.offlinee.online";
   const checkoutUrl = user ? `${publishedDomain}/pay/${user.id}?amount=25.00&orderId=ORDER_12345` : `${publishedDomain}/pay/YOUR_MERCHANT_ID?amount=25.00`;
 
   /* ─── Code Snippets ─── */
