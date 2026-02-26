@@ -95,9 +95,9 @@ export default function Checkout() {
         setTimeout(() => setCopiedStates((prev) => ({ ...prev, [id]: false })), 2000);
     };
 
-    const handleVerify = async () => {
+    const runVerification = async (currentTxId: string) => {
         if (isExpired) { toast.error("Session expired. Please request a new payment link."); return; }
-        if (!txId.trim()) { toast.error("Please enter a transaction ID"); return; }
+        if (!currentTxId.trim()) { toast.error("Please enter a transaction ID"); return; }
         if (!amount) return;
 
         setVerifying(true);
@@ -108,11 +108,11 @@ export default function Checkout() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     merchant_id: merchantId,
-                    transaction_id: txId.trim(),
+                    transaction_id: currentTxId.trim(),
                     payment_type: paymentType,
                     expected_amount: amount,
                     order_id: orderId,
-                    session_ts: sessionStart, // Send timestamp for server-side validation
+                    session_ts: sessionStart,
                 }),
             });
             const data = await res.json();
@@ -133,6 +133,24 @@ export default function Checkout() {
         }
         setVerifying(false);
     };
+
+    const handleVerifyClick = () => {
+        runVerification(txId);
+    };
+
+    // Auto-verify effect
+    useEffect(() => {
+        if (verifying || isExpired || success || !amount) return;
+
+        const trimmed = txId.trim();
+        // If it looks like a hash or ID, wait a moment then auto verify
+        if (trimmed.length > 15) {
+            const timer = setTimeout(() => {
+                runVerification(trimmed);
+            }, 800);
+            return () => clearTimeout(timer);
+        }
+    }, [txId, verifying, isExpired, success, amount]); // Run when txId changes
 
     if (loading) {
         return (
@@ -456,13 +474,15 @@ export default function Checkout() {
                                     className="border-slate-700 bg-slate-950/50 h-11 sm:h-12 text-white text-sm focus-visible:ring-primary/50 focus-visible:border-primary/50 rounded-xl"
                                     placeholder={paymentType === "bep20" ? "Paste 0x... hash here" : "Paste Binance Pay Order ID"}
                                     value={txId}
-                                    onChange={(e) => setTxId(e.target.value)}
+                                    onChange={(e) => {
+                                        setTxId(e.target.value);
+                                    }}
                                     disabled={isExpired}
                                 />
                             </div>
 
                             <Button
-                                onClick={handleVerify}
+                                onClick={handleVerifyClick}
                                 disabled={verifying || !txId.trim() || isExpired}
                                 className="w-full h-11 sm:h-12 bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-lg shadow-primary/25 transition-all duration-300 text-sm sm:text-[15px] group rounded-xl disabled:opacity-50"
                             >
