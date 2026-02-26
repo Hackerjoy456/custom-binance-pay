@@ -78,7 +78,7 @@ export default function AdminUsers() {
     try {
       const current = new Date(sub.expires_at);
       const newDate = daysDialog.action === "extend" ? addDays(current, parseInt(days)) : subDays(current, parseInt(days));
-      
+
       if (newDate <= new Date()) {
         const { error: e1 } = await supabase.from("subscriptions").update({ status: "expired" as const, expires_at: new Date().toISOString() }).eq("id", sub.id);
         if (e1) throw e1;
@@ -154,7 +154,7 @@ export default function AdminUsers() {
       const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
       const { data: sessionData } = await supabase.auth.getSession();
       const token = sessionData?.session?.access_token;
-      
+
       const res = await fetch(`https://${projectId}.supabase.co/functions/v1/admin-manage-user`, {
         method: "POST",
         headers: {
@@ -254,9 +254,11 @@ export default function AdminUsers() {
                         </Button>
                         {!isSelf(p.user_id) && (
                           <>
-                            <Button variant="ghost" size="sm" onClick={() => setConfirmDialog({ userId: p.user_id, email: p.email, action: "ban" })}>
-                              <Ban className="h-3 w-3 mr-1 text-warning" /> Ban
-                            </Button>
+                            {isSuperAdmin && (
+                              <Button variant="ghost" size="sm" onClick={() => setConfirmDialog({ userId: p.user_id, email: p.email, action: "ban" })}>
+                                <Ban className="h-3 w-3 mr-1 text-warning" /> Ban
+                              </Button>
+                            )}
                             <Button variant="ghost" size="sm" onClick={() => setConfirmDialog({ userId: p.user_id, email: p.email, action: "delete" })}>
                               <UserX className="h-3 w-3 mr-1 text-destructive" /> Delete
                             </Button>
