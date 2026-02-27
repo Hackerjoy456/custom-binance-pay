@@ -11,32 +11,35 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { safeError } from "@/lib/safe-error";
 import { format } from "date-fns";
-import { CheckCircle, Loader2, Copy, Wallet, CreditCard, Sparkles, Crown, Zap, Shield, Clock, BarChart3, ArrowRight, Star } from "lucide-react";
+import {
+  CheckCircle, Loader2, Copy, Wallet, CreditCard, Sparkles, Crown, Zap, Shield,
+  Clock, BarChart3, ArrowRight, Star, HelpCircle, AlertCircle, Info, Layout,
+  Trophy, Gem, Rocket, Check
+} from "lucide-react";
 
 /* ── Loading Skeleton ─────────────────────────────── */
 function SubscriptionSkeleton() {
   return (
-    <div className="space-y-10 max-w-5xl mx-auto">
-      {/* Header skeleton */}
-      <div className="text-center space-y-3">
-        <div className="h-9 w-64 mx-auto rounded-lg skeleton-glow animate-shimmer" />
-        <div className="h-5 w-80 mx-auto rounded-md skeleton-glow animate-shimmer" style={{ animationDelay: "0.1s" }} />
+    <div className="space-y-12 max-w-5xl mx-auto py-10 px-4">
+      <div className="text-center space-y-4">
+        <div className="h-4 w-32 mx-auto rounded-full bg-muted/40 animate-pulse" />
+        <div className="h-10 w-64 mx-auto rounded-xl bg-muted/40 animate-pulse" />
+        <div className="h-5 w-80 mx-auto rounded-lg bg-muted/40 animate-pulse" />
       </div>
-      {/* Card skeletons */}
-      <div className="grid gap-6 md:grid-cols-3">
+      <div className="grid gap-8 md:grid-cols-3">
         {[0, 1, 2].map((i) => (
-          <div key={i} className="rounded-xl border border-border/30 p-6 space-y-5" style={{ animationDelay: `${i * 0.15}s` }}>
+          <div key={i} className="rounded-3xl border border-border/40 p-8 space-y-6 bg-muted/20">
             <div className="flex justify-center">
-              <div className="h-14 w-14 rounded-2xl skeleton-glow animate-shimmer animate-skeleton-pulse" />
+              <div className="h-20 w-20 rounded-[2rem] bg-muted/40 animate-pulse" />
             </div>
-            <div className="h-6 w-24 mx-auto rounded skeleton-glow animate-shimmer" />
-            <div className="h-12 w-32 mx-auto rounded skeleton-glow animate-shimmer" />
-            <div className="space-y-3 pt-4">
-              {[0, 1, 2].map((j) => (
-                <div key={j} className="h-4 w-full rounded skeleton-glow animate-shimmer" style={{ animationDelay: `${j * 0.08}s` }} />
+            <div className="h-6 w-24 mx-auto rounded bg-muted/40 animate-pulse" />
+            <div className="h-12 w-32 mx-auto rounded bg-muted/40 animate-pulse" />
+            <div className="space-y-4 pt-4">
+              {[0, 1, 2, 3].map((j) => (
+                <div key={j} className="h-4 w-full rounded bg-muted/40 animate-pulse" />
               ))}
             </div>
-            <div className="h-11 w-full rounded-lg skeleton-glow animate-shimmer mt-4" />
+            <div className="h-14 w-full rounded-2xl bg-muted/40 animate-pulse mt-6" />
           </div>
         ))}
       </div>
@@ -44,13 +47,24 @@ function SubscriptionSkeleton() {
   );
 }
 
-/* ── Decorative Orb ───────────────────────────────── */
-function GlowOrb({ className, style }: { className?: string; style?: React.CSSProperties }) {
+/* ── Decorative Components ────────────────────────── */
+function GlowOrb({ className }: { className?: string }) {
   return (
-    <div className={`absolute rounded-full pointer-events-none blur-3xl ${className}`} style={style} />
+    <div className={`absolute rounded-full pointer-events-none blur-[120px] opacity-40 mix-blend-screen ${className}`} />
   );
 }
 
+const PlanIcon = ({ type, active }: { type: string; active?: boolean }) => {
+  const common = active ? "h-10 w-10 text-white" : "h-10 w-10 text-primary";
+  switch (type) {
+    case "weekly": return <Zap className={common} />;
+    case "monthly": return <Gem className={common} />;
+    case "yearly": return <Trophy className={common} />;
+    default: return <Sparkles className={common} />;
+  }
+};
+
+/* ── Main Component ───────────────────────────────── */
 export default function Subscription() {
   const { user } = useAuth();
   const [plans, setPlans] = useState<any[]>([]);
@@ -58,7 +72,6 @@ export default function Subscription() {
   const [loading, setLoading] = useState(true);
   const [platformSettings, setPlatformSettings] = useState<Record<string, string>>({});
 
-  // Payment dialog state
   const [payDialog, setPayDialog] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<any>(null);
   const [paymentType, setPaymentType] = useState<"bep20" | "binance_pay">("bep20");
@@ -111,7 +124,6 @@ export default function Subscription() {
           const errBody = await (error as any).context?.json?.();
           if (errBody?.error) errMsg = errBody.error;
         } catch { /* fallback */ }
-        if (errMsg === "Verification failed") errMsg = error.message || errMsg;
         toast.error(errMsg);
       } else if (data?.verified) {
         toast.success(`${selectedPlan.plan_type} subscription activated! 🎉`);
@@ -132,308 +144,257 @@ export default function Subscription() {
   const binancePayId = platformSettings.platform_binance_pay_id;
   const hasPaymentMethods = !!bep20Address || !!binancePayId;
 
-  const planIcons: Record<string, any> = { weekly: Zap, monthly: Crown, yearly: Sparkles };
-  const planColors: Record<string, string> = {
-    weekly: "from-primary/20 to-primary/5",
-    monthly: "from-primary/30 to-primary/10",
-    yearly: "from-primary/25 to-amber-500/10",
-  };
   const planFeatures: Record<string, string[]> = {
-    weekly: ["Payment verification API", "BEP20 + Binance Pay", "Basic analytics"],
-    monthly: ["Payment verification API", "BEP20 + Binance Pay", "Advanced analytics", "Priority support"],
-    yearly: ["Payment verification API", "BEP20 + Binance Pay", "Full analytics suite", "Priority support", "Custom endpoint"],
+    weekly: ["7 Days Access", "Binance Pay & BEP20", "Standard Analytics", "Discord Support"],
+    monthly: ["30 Days Access", "Priority API Access", "Advanced Dashboard", "Dedicated Support", "Full Analytics"],
+    yearly: ["365 Days Access", "Best Value (Save 40%)", "Custom Branding", "First Access to Features", "Global API Relay"],
   };
 
   const daysLeft = subscription
     ? Math.max(0, Math.ceil((new Date(subscription.expires_at).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
     : 0;
 
-  const periodLabel = (t: string) => t === "weekly" ? "week" : t === "monthly" ? "month" : "year";
-
   return (
-    <div className="relative space-y-10 max-w-5xl mx-auto overflow-hidden">
-      {/* Background orbs */}
-      <GlowOrb className="w-96 h-96 -top-48 -left-48 bg-primary/8 animate-pulse-glow" />
-      <GlowOrb className="w-72 h-72 top-1/3 -right-36 bg-primary/6 animate-pulse-glow" style={{ animationDelay: "1s" }} />
-      <GlowOrb className="w-64 h-64 bottom-20 left-1/4 bg-primary/4 animate-pulse-glow" style={{ animationDelay: "2s" }} />
+    <div className="relative space-y-12 max-w-6xl mx-auto px-4 pb-20">
+      <GlowOrb className="w-96 h-96 -top-20 -left-20 bg-primary/20" />
+      <GlowOrb className="w-[500px] h-[500px] top-1/4 -right-40 bg-indigo-500/10" />
 
-      {/* Header */}
-      <div className="relative text-center space-y-3 opacity-0 animate-fade-up">
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-primary/20 bg-primary/5 text-primary text-xs font-semibold uppercase tracking-widest mb-2 animate-glow-ring">
-          <Star className="h-3 w-3" />
-          Premium Plans
-          <Star className="h-3 w-3" />
+      {/* Header Section */}
+      <div className="relative text-center space-y-4 animate-in fade-in slide-in-from-top-4 duration-1000">
+        <div className="inline-flex items-center gap-2 px-6 py-2 rounded-full border border-primary/20 bg-primary/5 text-primary text-xs font-black uppercase tracking-[0.2em] shadow-xl shadow-primary/5">
+          <Star className="h-3 w-3 fill-current" />
+          Gateway Membership
+          <Star className="h-3 w-3 fill-current" />
         </div>
-        <h1 className="text-4xl font-extrabold tracking-tight">
-          Choose Your <span className="text-primary text-glow-strong">Plan</span>
+        <h1 className="text-4xl sm:text-6xl font-black tracking-tight leading-tight">
+          Select Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-indigo-400">Power Level</span>
         </h1>
-        <p className="text-muted-foreground max-w-lg mx-auto leading-relaxed">
-          Unlock the full power of payment verification. Pay with crypto, activate instantly.
+        <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+          Scale your custom payment ecosystem with our premium verification suites.
+          Instant setup, global reach, and unmatched speed.
         </p>
       </div>
 
-      {/* Active subscription banner */}
+      {/* Active Subscription State */}
       {subscription && (
-        <Card className="border-primary/40 glow-primary-intense overflow-hidden relative opacity-0 animate-fade-up" style={{ animationDelay: "0.1s" }}>
-          <div className="absolute inset-0 bg-gradient-to-r from-primary/12 via-primary/5 to-transparent pointer-events-none" />
-          <div className="absolute top-0 left-0 right-0 h-0.5 gradient-primary gradient-shimmer animate-shimmer" />
-          <CardContent className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 py-5 px-6">
-            <div className="flex items-center gap-4">
-              <div className="h-14 w-14 rounded-2xl gradient-primary flex items-center justify-center shrink-0 animate-float shadow-lg shadow-primary/20">
-                <CheckCircle className="h-7 w-7 text-primary-foreground" />
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="font-bold text-lg">Active Plan</span>
-                  <Badge className="capitalize gradient-primary text-primary-foreground font-bold px-3 py-0.5 shadow-md shadow-primary/20">
-                    {subscription.plan_type}
-                  </Badge>
+        <div className="relative group animate-in zoom-in-95 duration-700">
+          <div className="absolute -inset-1 bg-gradient-to-r from-primary/50 to-indigo-500/50 rounded-[2.5rem] blur opacity-25 group-hover:opacity-40 transition duration-1000 group-hover:duration-200" />
+          <Card className="rounded-[2rem] border-primary/20 bg-background/80 backdrop-blur-3xl relative overflow-hidden">
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary via-indigo-500 to-primary animate-border-flow" style={{ backgroundSize: '200% 200%' }} />
+            <CardContent className="p-8 sm:p-10">
+              <div className="flex flex-col md:flex-row items-center justify-between gap-8">
+                <div className="flex items-center gap-6">
+                  <div className="h-20 w-20 rounded-[2.5rem] bg-primary flex items-center justify-center shadow-2xl shadow-primary/40 group-hover:scale-110 transition-transform duration-500">
+                    <Crown className="h-10 w-10 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-black flex items-center gap-3">
+                      Your Current Plan: <span className="capitalize text-primary">{subscription.plan_type}</span>
+                    </h3>
+                    <div className="flex items-center gap-2 mt-2 text-muted-foreground font-medium">
+                      <Clock className="h-4 w-4 text-primary" />
+                      <span>Valid until {format(new Date(subscription.expires_at), "MMM d, yyyy")}</span>
+                    </div>
+                  </div>
                 </div>
-                <p className="text-sm text-muted-foreground mt-0.5">
-                  Expires {format(new Date(subscription.expires_at), "MMMM d, yyyy")}
-                </p>
+                <div className="flex items-center gap-8 pr-4">
+                  <div className="text-center">
+                    <span className="text-5xl font-black text-foreground drop-shadow-sm">{daysLeft}</span>
+                    <span className="block text-[10px] font-bold uppercase tracking-widest text-muted-foreground mt-1">Days Remaining</span>
+                  </div>
+                  <div className="h-16 w-px bg-border/50" />
+                  <div className="h-14 w-14 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center">
+                    <Rocket className="h-7 w-7 text-primary animate-float" />
+                  </div>
+                </div>
               </div>
-            </div>
-            <div className="flex items-center gap-4">
-              <div className="text-right">
-                <span className="text-3xl font-extrabold text-primary text-glow-strong animate-count-up">{daysLeft}</span>
-                <span className="text-xs text-muted-foreground block mt-0.5 uppercase tracking-wider font-semibold">days left</span>
-              </div>
-              <div className="h-12 w-px bg-gradient-to-b from-transparent via-primary/30 to-transparent" />
-              <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center animate-pulse-glow">
-                <Clock className="h-5 w-5 text-primary" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </div>
       )}
 
-      {/* Plans grid */}
-      <div className="grid gap-6 md:grid-cols-3">
-        {plans.map((plan, index) => {
+      {/* Pricing Grid */}
+      <div className="grid gap-8 md:grid-cols-3">
+        {plans.map((plan, i) => {
+          const isPro = plan.plan_type === "monthly";
           const isCurrent = subscription?.plan_type === plan.plan_type;
-          const isPopular = plan.plan_type === "monthly";
-          const PlanIcon = planIcons[plan.plan_type] || Zap;
           const features = planFeatures[plan.plan_type] || planFeatures.weekly;
-          const gradientBg = planColors[plan.plan_type] || planColors.weekly;
-          const delayClass = index === 0 ? "animate-fade-up-delay-1" : index === 1 ? "animate-fade-up-delay-2" : "animate-fade-up-delay-3";
 
           return (
-            <Card
-              key={plan.id}
-              className={`group relative overflow-hidden transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl opacity-0 ${delayClass} ${
-                isCurrent
-                  ? "border-primary/60 glow-primary-intense"
-                  : isPopular
-                  ? "border-primary/30 glow-primary"
-                  : "border-border/50 card-glow"
-              }`}
-            >
-              {/* Top accent line */}
-              {isPopular && (
-                <div className="absolute -top-px left-0 right-0 h-1 gradient-primary animate-border-flow" style={{ backgroundSize: "200% 200%" }} />
-              )}
-
-              {/* Popular badge */}
-              {isPopular && (
-                <div className="absolute top-4 right-4 z-10">
-                  <Badge className="gradient-primary text-primary-foreground text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 shadow-lg shadow-primary/25 animate-pulse-glow">
-                    <Star className="h-3 w-3 mr-1" />
-                    Most Popular
-                  </Badge>
-                </div>
-              )}
-
-              {/* Current badge */}
-              {isCurrent && !isPopular && (
-                <div className="absolute top-4 right-4 z-10">
-                  <Badge variant="outline" className="border-primary/40 text-primary text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 animate-glow-ring">
-                    Current
-                  </Badge>
-                </div>
-              )}
-
-              {/* Background gradient on hover */}
-              <div className={`absolute inset-0 bg-gradient-to-b ${gradientBg} pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-700`} />
-
-              {/* Shimmer line on hover */}
-              <div className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-700">
-                <div className="absolute top-0 left-0 right-0 h-px gradient-shimmer animate-shimmer" />
-              </div>
-
-              <CardHeader className="text-center relative pb-2 pt-8">
-                <div className={`mx-auto mb-4 h-16 w-16 rounded-2xl flex items-center justify-center transition-all duration-500 group-hover:scale-110 group-hover:shadow-xl ${
-                  isPopular
-                    ? "gradient-primary shadow-lg shadow-primary/25 group-hover:shadow-primary/40"
-                    : "bg-primary/10 group-hover:bg-primary/20"
-                }`}>
-                  <PlanIcon className={`h-8 w-8 transition-transform duration-300 group-hover:rotate-12 ${isPopular ? "text-primary-foreground" : "text-primary"}`} />
-                </div>
-                <CardTitle className="capitalize text-xl font-bold tracking-wide">{plan.plan_type}</CardTitle>
-                <div className="mt-5 mb-1">
-                  <span className={`text-5xl font-black tracking-tighter transition-all duration-300 ${isPopular ? "text-primary text-glow-strong group-hover:text-glow-strong" : "group-hover:text-primary"}`}>
-                    ${plan.price}
-                  </span>
-                  <span className="text-muted-foreground text-sm ml-1 font-medium">
-                    /{periodLabel(plan.plan_type)}
-                  </span>
-                </div>
-                {plan.description && (
-                  <CardDescription className="mt-2 text-xs leading-relaxed">{plan.description}</CardDescription>
+            <div key={plan.id} className={`flex flex-col h-full animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-${(i + 1) * 200}`}>
+              <Card className={`flex flex-col h-full rounded-[2.5rem] overflow-hidden transition-all duration-500 border-border/40 bg-card/50 backdrop-blur-sm group hover:-translate-y-3 hover:shadow-[0_20px_50px_rgba(0,0,0,0.2)] ${isPro ? 'border-primary/40 ring-1 ring-primary/20 bg-primary/5' : ''}`}>
+                {isPro && (
+                  <div className="h-1.5 w-full bg-gradient-to-r from-primary via-indigo-500 to-primary" />
                 )}
-              </CardHeader>
 
-              <CardContent className="pt-4 px-6">
-                <div className="h-px bg-gradient-to-r from-transparent via-border to-transparent mb-5" />
-                <ul className="space-y-3 text-sm">
-                  {features.map((feature, i) => (
-                    <li key={i} className="flex items-center gap-2.5 group/item transition-transform duration-200 hover:translate-x-1">
-                      <div className="h-5 w-5 rounded-full bg-primary/10 flex items-center justify-center shrink-0 transition-colors duration-200 group-hover/item:bg-primary/20">
-                        <CheckCircle className="h-3 w-3 text-primary" />
+                <CardHeader className="p-8 pt-10 text-center relative">
+                  {isPro && (
+                    <Badge className="absolute top-4 right-6 gradient-primary text-primary-foreground font-black text-[10px] uppercase py-1 px-3 rounded-full animate-pulse">
+                      Recommended
+                    </Badge>
+                  )}
+                  <div className={`mx-auto mb-6 h-20 w-20 rounded-[2rem] flex items-center justify-center transition-all duration-500 group-hover:rotate-6 ${isPro ? 'bg-primary shadow-2xl shadow-primary/40' : 'bg-muted/40'}`}>
+                    <PlanIcon type={plan.plan_type} active={isPro} />
+                  </div>
+                  <CardTitle className="text-2xl font-black capitalize tracking-tight">{plan.plan_type}</CardTitle>
+                  <CardDescription className="mt-2 font-medium">Essential for small platforms</CardDescription>
+                  <div className="mt-8 flex items-baseline justify-center gap-1">
+                    <span className={`text-6xl font-black ${isPro ? 'text-primary' : ''}`}>${plan.price}</span>
+                    <span className="text-muted-foreground font-bold">/mo</span>
+                  </div>
+                </CardHeader>
+
+                <CardContent className="flex-1 p-8 pt-0">
+                  <div className="space-y-4">
+                    {features.map((f, j) => (
+                      <div key={j} className="flex items-center gap-3">
+                        <div className={`h-5 w-5 rounded-full flex items-center justify-center shrink-0 ${isPro ? 'bg-primary text-primary-foreground' : 'bg-primary/10 text-primary'}`}>
+                          <Check className="h-3 w-3" />
+                        </div>
+                        <span className="text-sm font-semibold text-foreground/80">{f}</span>
                       </div>
-                      <span className="text-muted-foreground transition-colors duration-200 group-hover/item:text-foreground">{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
+                    ))}
+                  </div>
+                </CardContent>
 
-              <CardFooter className="pt-4 pb-7 px-6">
-                <Button
-                  className={`w-full h-12 font-bold text-sm tracking-wide transition-all duration-300 ${
-                    !isCurrent && isPopular
-                      ? "gradient-primary text-primary-foreground glow-primary hover:glow-primary-intense hover:shadow-xl hover:shadow-primary/20 hover:scale-[1.02]"
-                      : !isCurrent
-                      ? "hover:glow-primary hover:scale-[1.02]"
-                      : "hover:border-primary/60"
-                  }`}
-                  variant={isCurrent ? "outline" : "default"}
-                  onClick={() => openPayment(plan)}
-                  disabled={!hasPaymentMethods}
-                >
-                  {isCurrent ? "Renew Plan" : "Get Started"}
-                  {!isCurrent && <ArrowRight className="h-4 w-4 ml-1 transition-transform duration-300 group-hover:translate-x-1" />}
-                </Button>
-              </CardFooter>
-            </Card>
+                <CardFooter className="p-8 pt-0">
+                  <Button
+                    className={`w-full h-14 rounded-2xl text-base font-black transition-all duration-300 ${isCurrent ? 'bg-muted text-muted-foreground' : isPro ? 'gradient-primary text-primary-foreground shadow-2xl shadow-primary/40 hover:scale-[1.02]' : 'bg-foreground text-background hover:scale-[1.02]'}`}
+                    variant={isCurrent ? "secondary" : "default"}
+                    onClick={() => openPayment(plan)}
+                    disabled={!hasPaymentMethods || isCurrent}
+                  >
+                    {isCurrent ? "Current Plan" : "Upgrade Now"}
+                    {!isCurrent && <ArrowRight className="ml-2 h-5 w-5" />}
+                  </Button>
+                </CardFooter>
+              </Card>
+            </div>
           );
         })}
       </div>
 
-      {/* Trust indicators */}
-      <div className="flex flex-wrap items-center justify-center gap-10 text-sm text-muted-foreground py-6 opacity-0 animate-fade-up" style={{ animationDelay: "0.4s" }}>
-        {[
-          { icon: Shield, label: "Secure crypto payments" },
-          { icon: Zap, label: "Instant activation" },
-          { icon: BarChart3, label: "Real-time analytics" },
-        ].map(({ icon: Icon, label }, i) => (
-          <div key={i} className="flex items-center gap-2.5 group cursor-default transition-colors duration-300 hover:text-foreground">
-            <div className="h-8 w-8 rounded-lg bg-primary/8 flex items-center justify-center transition-all duration-300 group-hover:bg-primary/15 group-hover:glow-primary group-hover:scale-110">
-              <Icon className="h-4 w-4 text-primary" />
+      {/* Info Boxes Section */}
+      <div className="grid gap-6 md:grid-cols-2 pt-8">
+        <div className="p-8 rounded-[2rem] border border-border/40 bg-card/30 backdrop-blur-md hover:bg-card/50 transition-all group overflow-hidden relative">
+          <div className="absolute -bottom-6 -right-6 h-24 w-24 bg-primary/10 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-1000" />
+          <div className="flex gap-6 items-start relative z-10">
+            <div className="h-12 w-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
+              <AlertCircle className="h-6 w-6 text-amber-500" />
             </div>
-            <span className="font-medium">{label}</span>
-          </div>
-        ))}
-      </div>
-
-      {!hasPaymentMethods && (
-        <p className="text-sm text-destructive text-center animate-fade-up">
-          Payment methods are not configured yet. Please contact the admin.
-        </p>
-      )}
-
-      {/* Payment Dialog */}
-      <Dialog open={payDialog} onOpenChange={setPayDialog}>
-        <DialogContent className="sm:max-w-lg border-primary/20 glow-primary-strong">
-          <div className="absolute top-0 left-0 right-0 h-0.5 gradient-primary" />
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-xl gradient-primary flex items-center justify-center shadow-lg shadow-primary/20">
-                <CreditCard className="h-5 w-5 text-primary-foreground" />
-              </div>
-              <div>
-                <span>Pay for </span>
-                <span className="capitalize text-primary">{selectedPlan?.plan_type}</span>
-                <span> plan</span>
-                <span className="block text-2xl font-black text-primary text-glow mt-0.5">${selectedPlan?.price}</span>
-              </div>
-            </DialogTitle>
-            <DialogDescription>
-              Send the exact amount below, then paste your transaction ID to verify.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-5">
-            <div className="space-y-2">
-              <Label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Payment Method</Label>
-              <Select value={paymentType} onValueChange={(v) => setPaymentType(v as any)}>
-                <SelectTrigger className="border-primary/20 focus:border-primary h-11">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {bep20Address && <SelectItem value="bep20"><span className="flex items-center gap-2"><Wallet className="h-4 w-4 text-primary" /> BEP20 (BSC)</span></SelectItem>}
-                  {binancePayId && <SelectItem value="binance_pay"><span className="flex items-center gap-2"><CreditCard className="h-4 w-4 text-primary" /> Binance Pay</span></SelectItem>}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {paymentType === "bep20" && bep20Address && (
-              <div className="space-y-2 rounded-xl border border-primary/15 bg-primary/5 p-5">
-                <Label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
-                  Send exactly <span className="text-primary font-bold">${selectedPlan?.price} USDT</span> (BEP20/BSC) to:
-                </Label>
-                <div className="flex items-center gap-2">
-                  <code className="flex-1 rounded-lg bg-background border border-primary/20 p-3.5 text-xs break-all font-mono text-primary glow-primary">{bep20Address}</code>
-                  <Button variant="outline" size="icon" onClick={() => copyAddress(bep20Address)} className="border-primary/20 hover:glow-primary shrink-0 h-11 w-11">
-                    <Copy className="h-4 w-4" />
-                  </Button>
-                </div>
-                <p className="text-xs text-muted-foreground">Network: BNB Smart Chain (BEP20). Send USDT only.</p>
-              </div>
-            )}
-
-            {paymentType === "binance_pay" && binancePayId && (
-              <div className="space-y-2 rounded-xl border border-primary/15 bg-primary/5 p-5">
-                <Label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
-                  Send exactly <span className="text-primary font-bold">${selectedPlan?.price}</span> via Binance Pay to:
-                </Label>
-                <div className="flex items-center gap-2">
-                  <code className="flex-1 rounded-lg bg-background border border-primary/20 p-3.5 text-sm break-all font-mono text-primary font-bold glow-primary">{binancePayId}</code>
-                  <Button variant="outline" size="icon" onClick={() => copyAddress(binancePayId)} className="border-primary/20 hover:glow-primary shrink-0 h-11 w-11">
-                    <Copy className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            )}
-
-            <div className="space-y-2">
-              <Label className="text-xs uppercase tracking-wider text-primary font-bold">
-                {paymentType === "bep20" ? "Transaction Hash (TX Hash)" : "Order ID"}
-              </Label>
-              <Input
-                className="border-primary/30 focus:border-primary focus:glow-primary transition-all duration-300 h-11"
-                placeholder={paymentType === "bep20" ? "0x..." : "Enter your Binance Pay order ID"}
-                value={txId}
-                onChange={(e) => setTxId(e.target.value)}
-              />
-              <p className="text-xs text-muted-foreground">
-                {paymentType === "bep20"
-                  ? "Paste the BSCScan transaction hash after sending."
-                  : "Paste the Binance Pay order ID from your payment confirmation."}
+            <div>
+              <h4 className="font-black text-lg mb-2">Important Note</h4>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Verification can take up to 2-5 minutes depending on the network speed.
+                Keep your transaction hash safe during the process.
               </p>
             </div>
           </div>
+        </div>
+        <div className="p-8 rounded-[2rem] border border-border/40 bg-card/30 backdrop-blur-md hover:bg-card/50 transition-all group overflow-hidden relative">
+          <div className="absolute -bottom-6 -right-6 h-24 w-24 bg-indigo-500/10 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-1000" />
+          <div className="flex gap-6 items-start relative z-10">
+            <div className="h-12 w-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center">
+              <HelpCircle className="h-6 w-6 text-indigo-500" />
+            </div>
+            <div>
+              <h4 className="font-black text-lg mb-2">Need a custom plan?</h4>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                If you need more than 50k monthly verifications, reach out to our team
+                on Discord for an enterprise solution tailored for you.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
 
-          <DialogFooter className="gap-2 pt-2">
-            <Button variant="outline" onClick={() => setPayDialog(false)} className="h-11">Cancel</Button>
-            <Button
-              onClick={handleVerify}
-              disabled={verifying || !txId.trim()}
-              className="glow-primary min-w-[160px] h-11 font-bold hover:glow-primary-intense transition-all duration-300"
-            >
-              {verifying && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {verifying ? "Verifying..." : "Verify Payment"}
-            </Button>
-          </DialogFooter>
+      {/* Payment Dialog - Redesigned */}
+      <Dialog open={payDialog} onOpenChange={setPayDialog}>
+        <DialogContent className="sm:max-w-xl rounded-[2.5rem] border-primary/20 bg-background/95 backdrop-blur-2xl p-0 overflow-hidden shadow-2xl">
+          <div className="p-8 space-y-8">
+            <DialogHeader className="text-center">
+              <div className="mx-auto mb-4 h-16 w-16 rounded-[1.5rem] bg-primary flex items-center justify-center shadow-xl shadow-primary/30">
+                <Wallet className="h-8 w-8 text-white" />
+              </div>
+              <DialogTitle className="text-3xl font-black">Finalize Payment</DialogTitle>
+              <DialogDescription className="text-base font-medium">
+                Complete the transaction below to activate your <span className="text-primary font-bold">{selectedPlan?.plan_type}</span> plan.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-6">
+              <div className="p-6 rounded-3xl border border-divider bg-muted/30">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="space-y-1">
+                    <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">Amount to pay</p>
+                    <p className="text-4xl font-black">${selectedPlan?.price} <span className="text-lg text-primary">USDT</span></p>
+                  </div>
+                  <PlanIcon type={selectedPlan?.plan_type || 'weekly'} />
+                </div>
+
+                <div className="space-y-4">
+                  <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Select Network</Label>
+                  <Select value={paymentType} onValueChange={(v) => setPaymentType(v as any)}>
+                    <SelectTrigger className="h-14 rounded-2xl border-primary/20 bg-background font-bold text-base">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-2xl">
+                      {bep20Address && <SelectItem value="bep20" className="py-3"><span className="flex items-center gap-3"><Gem className="h-4 w-4" /> BEP20 (Binance Smart Chain)</span></SelectItem>}
+                      {binancePayId && <SelectItem value="binance_pay" className="py-3"><span className="flex items-center gap-3"><Zap className="h-4 w-4" /> Binance Pay ID</span></SelectItem>}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div className="p-6 rounded-3xl border border-primary/10 bg-primary/5 space-y-4 animate-in fade-in transition-all">
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs font-black uppercase tracking-widest text-primary">Your Destination Address</p>
+                    <Badge variant="outline" className="text-[10px] tracking-wider border-primary/20">Official Account</Badge>
+                  </div>
+                  <div className="flex gap-3">
+                    <code className="flex-1 p-4 rounded-2xl bg-background border border-border text-sm font-mono break-all font-bold text-primary">
+                      {paymentType === 'bep20' ? bep20Address : binancePayId}
+                    </code>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-14 w-14 rounded-2xl shrink-0 group hover:bg-primary hover:text-white transition-colors"
+                      onClick={() => copyAddress((paymentType === 'bep20' ? bep20Address : binancePayId)!)}
+                    >
+                      <Copy className="h-5 w-5 group-hover:scale-110 transition-transform" />
+                    </Button>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground font-medium text-center">Please verify the address twice before sending. Only send USDT.</p>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground pl-2">Confirm Transaction</Label>
+                <div className="flex gap-3">
+                  <Input
+                    placeholder={paymentType === 'bep20' ? "Paste TX Hash (0x...)" : "Enter Order ID / Reference"}
+                    className="h-14 rounded-2xl border-border bg-background font-mono text-sm px-5 focus:ring-2 focus:ring-primary/20"
+                    value={txId}
+                    onChange={(e) => setTxId(e.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-4">
+              <Button variant="ghost" className="flex-1 h-14 rounded-2xl font-bold" onClick={() => setPayDialog(false)}>Cancel</Button>
+              <Button
+                className="flex-[2] h-14 rounded-2xl font-black text-lg gradient-primary shadow-2xl shadow-primary/30"
+                onClick={handleVerify}
+                disabled={verifying || !txId.trim()}
+              >
+                {verifying ? (
+                  <><Loader2 className="mr-3 h-5 w-5 animate-spin" /> Verifying</>
+                ) : "Activate Now"}
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

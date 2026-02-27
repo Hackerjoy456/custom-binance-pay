@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Copy, Link as LinkIcon, ExternalLink } from "lucide-react";
+import { Copy, Link as LinkIcon, ExternalLink, Zap, MousePointer2, Settings, Globe, ShieldCheck, DollarSign } from "lucide-react";
 import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
 
 export default function PaymentLinks() {
     const { user } = useAuth();
@@ -45,10 +46,8 @@ export default function PaymentLinks() {
             if (navigator.clipboard && window.isSecureContext) {
                 await navigator.clipboard.writeText(generatedLink);
             } else {
-                // Fallback for non-https older environments (sometimes occurs in dev preview environments)
                 const textArea = document.createElement("textarea");
                 textArea.value = generatedLink;
-                // Avoid scrolling to bottom
                 textArea.style.top = "0";
                 textArea.style.left = "0";
                 textArea.style.position = "fixed";
@@ -58,106 +57,159 @@ export default function PaymentLinks() {
                 try {
                     document.execCommand('copy');
                 } catch (err) {
-                    console.error('Fallback: Oops, unable to copy', err);
+                    console.error('Fallback error', err);
                 }
                 document.body.removeChild(textArea);
             }
-            toast.success("Payment link copied to clipboard!");
+            toast.success("Payment link copied to terminal! 🚀");
         } catch (err) {
             toast.error("Failed to copy link");
-            console.error(err);
         }
     };
 
     return (
-        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div>
-                <h1 className="text-3xl font-bold tracking-tight">Payment Links</h1>
-                <p className="text-muted-foreground mt-2">
-                    Create simple shareable links to get paid directly without writing any code.
-                </p>
+        <div className="max-w-5xl mx-auto space-y-10 pb-20 animate-in fade-in duration-700">
+            {/* Header Section */}
+            <div className="flex flex-col sm:flex-row items-end justify-between gap-6">
+                <div className="space-y-1">
+                    <div className="flex items-center gap-2 mb-1">
+                        <div className="h-6 w-6 rounded-lg bg-indigo-500/10 flex items-center justify-center">
+                            <MousePointer2 className="h-3.5 w-3.5 text-indigo-500" />
+                        </div>
+                        <span className="text-xs font-black uppercase tracking-[0.2em] text-indigo-500">No-Code Solution</span>
+                    </div>
+                    <h1 className="text-3xl font-black tracking-tight">One-Click Pay Links</h1>
+                    <p className="text-muted-foreground font-medium">Generate shareable payment endpoints for direct customer settlement.</p>
+                </div>
+                <div className="h-12 flex items-center gap-4 px-6 rounded-2xl bg-muted/30 border border-border/40">
+                    <div className="flex items-center gap-2">
+                        <Globe className="h-4 w-4 text-emerald-500" />
+                        <span className="text-[10px] font-black uppercase tracking-widest leading-none">Global Network Active</span>
+                    </div>
+                </div>
             </div>
 
-            <div className="grid gap-6 md:grid-cols-2">
-                <Card className="border-border/50 shadow-lg relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-bl-[100px] -z-10" />
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                            <LinkIcon className="h-5 w-5 text-primary" />
-                            Generator Options
-                        </CardTitle>
-                        <CardDescription>Configure the details of your payment link.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="amount">Amount (USDT) <span className="text-red-500">*</span></Label>
-                            <Input
-                                id="amount"
-                                type="number"
-                                placeholder="25.00"
-                                value={amount}
-                                onChange={(e) => setAmount(e.target.value)}
-                                className="bg-muted/50"
-                            />
-                        </div>
+            <div className="grid gap-8 lg:grid-cols-5">
+                {/* Generator Options */}
+                <div className="lg:col-span-3 space-y-8">
+                    <Card className="rounded-[2.5rem] border-border/40 bg-card/40 backdrop-blur-sm overflow-hidden shadow-xl border-l-4 border-l-primary">
+                        <CardHeader className="p-8 pb-4">
+                            <div className="flex items-center gap-3">
+                                <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                                    <Settings className="h-5 w-5 text-primary" />
+                                </div>
+                                <div>
+                                    <CardTitle className="text-xl font-black">Link Constructor</CardTitle>
+                                    <CardDescription className="font-bold opacity-70">Define the payload for your smart payment link.</CardDescription>
+                                </div>
+                            </div>
+                        </CardHeader>
+                        <CardContent className="p-8 pt-4 space-y-6">
+                            <div className="grid md:grid-cols-2 gap-6">
+                                <div className="space-y-3">
+                                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Settlement Amount (USDT)</Label>
+                                    <div className="relative group">
+                                        <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-primary opacity-50" />
+                                        <Input
+                                            type="number"
+                                            placeholder="0.00"
+                                            value={amount}
+                                            onChange={(e) => setAmount(e.target.value)}
+                                            className="pl-12 h-14 rounded-2xl border-border bg-background/50 font-black text-lg focus:ring-primary/10"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="space-y-3">
+                                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Internal Reference (ID)</Label>
+                                    <div className="relative group">
+                                        <Zap className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-primary opacity-50" />
+                                        <Input
+                                            placeholder="INV-0001"
+                                            value={orderId}
+                                            onChange={(e) => setOrderId(e.target.value)}
+                                            className="pl-12 h-14 rounded-2xl border-border bg-background/50 font-bold focus:ring-primary/10"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="space-y-3">
+                                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Settlement Redirect (Return URL)</Label>
+                                <div className="relative group">
+                                    <Globe className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-primary opacity-50" />
+                                    <Input
+                                        placeholder="https://yourbrand.com/success"
+                                        value={successUrl}
+                                        onChange={(e) => setSuccessUrl(e.target.value)}
+                                        className="pl-12 h-14 rounded-2xl border-border bg-background/50 font-bold focus:ring-primary/10"
+                                    />
+                                </div>
+                                <p className="text-[10px] font-bold text-muted-foreground uppercase opacity-60 ml-1">Customers will be routed here after verification.</p>
+                            </div>
+                        </CardContent>
+                    </Card>
 
-                        <div className="space-y-2">
-                            <Label htmlFor="orderId">Order ID / Description (Optional)</Label>
-                            <Input
-                                id="orderId"
-                                placeholder="INV-001 or Website Design"
-                                value={orderId}
-                                onChange={(e) => setOrderId(e.target.value)}
-                                className="bg-muted/50"
-                            />
+                    <div className="p-8 rounded-[2rem] bg-emerald-500/5 border border-emerald-500/10 flex items-start gap-4">
+                        <ShieldCheck className="h-6 w-6 text-emerald-500 shrink-0 mt-0.5" />
+                        <div className="space-y-1">
+                            <p className="text-sm font-black text-emerald-500 uppercase tracking-widest">Enterprise Protection</p>
+                            <p className="text-sm font-medium text-muted-foreground leading-relaxed">
+                                Every generated link is cryptographically bound to your identity and protected by our secondary verification layer.
+                            </p>
                         </div>
+                    </div>
+                </div>
 
-                        <div className="space-y-2">
-                            <Label htmlFor="successUrl">Redirect URL After Payment (Optional)</Label>
-                            <Input
-                                id="successUrl"
-                                placeholder="https://yourwebsite.com/thank-you"
-                                value={successUrl}
-                                onChange={(e) => setSuccessUrl(e.target.value)}
-                                className="bg-muted/50"
-                            />
-                        </div>
-                    </CardContent>
-                </Card>
+                {/* Live Preview Card */}
+                <div className="lg:col-span-2">
+                    <Card className="rounded-[2.5rem] border-primary/20 bg-background/50 backdrop-blur-xl overflow-hidden h-full flex flex-col shadow-2xl group border-t-8 border-t-primary">
+                        <CardHeader className="p-8 text-center">
+                            <div className="mx-auto h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-500">
+                                <LinkIcon className="h-8 w-8 text-primary" />
+                            </div>
+                            <CardTitle className="text-2xl font-black">Live Token</CardTitle>
+                            <CardDescription className="font-bold">Production-ready endpoint</CardDescription>
+                        </CardHeader>
+                        <CardContent className="p-8 pt-0 flex-1 flex flex-col justify-center space-y-8">
+                            <div className="p-6 rounded-3xl bg-muted/40 border border-border shadow-inner relative overflow-hidden group/link min-h-[140px] flex items-center justify-center">
+                                {generatedLink ? (
+                                    <div className="space-y-4 w-full">
+                                        <code className="block text-center font-mono text-xs font-black text-primary break-all leading-relaxed">
+                                            {generatedLink}
+                                        </code>
+                                        <div className="flex justify-center">
+                                            <Badge className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest">Payload Ready</Badge>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="text-center space-y-2 opacity-30">
+                                        <Zap className="h-8 w-8 mx-auto animate-pulse" />
+                                        <p className="text-[10px] font-black uppercase tracking-widest">Awaiting Parameters</p>
+                                    </div>
+                                )}
+                            </div>
 
-                <Card className="border-border/50 shadow-lg group">
-                    <CardHeader>
-                        <CardTitle>Your Payment Link</CardTitle>
-                        <CardDescription>Share this link directly with your customers.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
-                        <div className="p-4 rounded-xl bg-muted/30 border border-border/50 break-all font-mono text-sm text-muted-foreground min-h-[100px] flex items-center justify-center text-center leading-relaxed">
-                            {generatedLink ? (
-                                <span className="text-foreground">{generatedLink}</span>
-                            ) : (
-                                "Enter amount above to generate a link"
-                            )}
-                        </div>
-
-                        <div className="flex gap-3">
-                            <Button
-                                onClick={copyLink}
-                                disabled={!generatedLink || !amount}
-                                className="w-full gap-2 font-semibold shadow-md"
-                            >
-                                <Copy className="h-4 w-4" />
-                                Copy Link
-                            </Button>
-                            {generatedLink && amount && (
-                                <Button variant="outline" asChild className="shrink-0 gap-2">
-                                    <a href={generatedLink} target="_blank" rel="noopener noreferrer">
-                                        <ExternalLink className="h-4 w-4" />
-                                    </a>
+                            <div className="space-y-4">
+                                <Button
+                                    onClick={copyLink}
+                                    disabled={!generatedLink || !amount}
+                                    className="w-full h-16 rounded-2xl font-black text-lg gradient-primary shadow-xl shadow-primary/30 active:scale-95 transition-all text-white"
+                                >
+                                    <Copy className="h-5 w-5 mr-3" /> Copy Deployment Link
                                 </Button>
-                            )}
-                        </div>
-                    </CardContent>
-                </Card>
+                                {generatedLink && amount && (
+                                    <Button variant="outline" asChild className="w-full h-12 rounded-xl font-bold border-border/50 hover:bg-muted transition-all">
+                                        <a href={generatedLink} target="_blank" rel="noopener noreferrer">
+                                            <ExternalLink className="h-4 w-4 mr-2" /> Live Preview
+                                        </a>
+                                    </Button>
+                                )}
+                            </div>
+                        </CardContent>
+                        <CardFooter className="p-8 pt-0 justify-center">
+                            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-40">Secured via gateway v1.4</p>
+                        </CardFooter>
+                    </Card>
+                </div>
             </div>
         </div>
     );

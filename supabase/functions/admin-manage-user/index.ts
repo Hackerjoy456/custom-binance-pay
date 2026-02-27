@@ -128,7 +128,34 @@ Deno.serve(async (req) => {
       return json({ success: true, message: "User deleted successfully" });
     }
 
-    return json({ error: "Unknown action. Use 'ban', 'unban', or 'delete'" }, 400);
+    if (action === "create") {
+      const { email, password, full_name, role } = body;
+      if (!email || !password) {
+        return json({ error: "Email and password are required for creation" }, 400);
+      }
+
+      const { data: { user: newUser }, error: createError } = await supabaseAdmin.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true,
+        user_metadata: { full_name: full_name || "" }
+      });
+
+      if (createError) {
+        return json({ error: "Failed to create user: " + createError.message }, 500);
+      }
+
+      if (newUser && role === "admin") {
+        await supabaseAdmin.from("user_roles").insert({
+          user_id: newUser.id,
+          role: "admin"
+        });
+      }
+
+      return json({ success: true, message: "User created successfully", user_id: newUser?.id });
+    }
+
+    return json({ error: "Unknown action. Use 'ban', 'unban', 'delete', or 'create'" }, 400);
   } catch (e) {
     return json({ error: "An unexpected error occurred" }, 500);
   }

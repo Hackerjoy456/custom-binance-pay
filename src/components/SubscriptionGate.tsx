@@ -7,11 +7,15 @@ import { Lock } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export default function SubscriptionGate({ children }: { children: ReactNode }) {
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const [hasActive, setHasActive] = useState<boolean | null>(null);
 
   useEffect(() => {
     if (!user) return;
+    if (isAdmin) {
+      setHasActive(true);
+      return;
+    }
     supabase
       .from("subscriptions")
       .select("id")
@@ -20,7 +24,7 @@ export default function SubscriptionGate({ children }: { children: ReactNode }) 
       .gte("expires_at", new Date().toISOString())
       .limit(1)
       .then(({ data }) => setHasActive((data?.length || 0) > 0));
-  }, [user]);
+  }, [user, isAdmin]);
 
   if (hasActive === null) {
     return (

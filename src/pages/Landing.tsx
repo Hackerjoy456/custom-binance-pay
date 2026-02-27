@@ -11,9 +11,46 @@ const features = [
 ];
 
 const plans = [
-  { type: "Weekly", price: "$5", period: "/week", features: ["1,000 API calls", "Payment verification", "Basic support"] },
-  { type: "Monthly", price: "$15", period: "/month", features: ["5,000 API calls", "Payment verification", "Priority support", "Usage analytics"], popular: true },
-  { type: "Yearly", price: "$99", period: "/year", features: ["50,000 API calls", "Payment verification", "Priority support", "Usage analytics", "Custom branding"] },
+  {
+    type: "Starter Protocol",
+    price: "$5",
+    period: "/week",
+    features: [
+      "1,000 Verified Transactions",
+      "Binance Pay Integration",
+      "BEP20 Network Access",
+      "Standard Webhook Relay",
+      "Email Support (24h)"
+    ]
+  },
+  {
+    type: "Business Core",
+    price: "$15",
+    period: "/month",
+    features: [
+      "10,000 Verified Transactions",
+      "Full API Customization",
+      "Live Telemetry Dashboard",
+      "Priority Webhook Queue",
+      "Exclusive Discord Support",
+      "Custom Gateway Branding"
+    ],
+    popular: true
+  },
+  {
+    type: "Enterprise Alpha",
+    price: "$99",
+    period: "/year",
+    features: [
+      "Unlimited Verifications",
+      "Ultra-Low Latency Nodes",
+      "Advanced Usage Analytics",
+      "Dedicated Instance Setup",
+      "Direct Developer JSON API",
+      "White-Label Implementation",
+      "SLA 99.9% Guarantee"
+    ]
+  },
 ];
 
 const faqs = [
@@ -43,7 +80,7 @@ export default function Landing() {
       <section className="relative mx-auto max-w-6xl px-4 py-28 text-center overflow-hidden">
         {/* Background glow orb */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] rounded-full bg-primary/5 blur-[120px] pointer-events-none" />
-        
+
         <div className="relative z-10">
           <div className="inline-flex items-center gap-2 mb-6 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-sm font-medium text-primary glow-primary">
             <Sparkles className="h-3.5 w-3.5" /> Payment Verification API
@@ -141,11 +178,40 @@ export default function Landing() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-border/50 py-8">
-        <div className="mx-auto max-w-6xl px-4 text-center text-sm text-muted-foreground">
-          © 2026 BinanceVerify. All rights reserved.
+      <footer className="border-t border-border/50 py-12">
+        <div className="mx-auto max-w-6xl px-4 flex flex-col md:flex-row items-center justify-between gap-6 overflow-hidden">
+          <div className="flex flex-col items-center md:items-start gap-2">
+            <span className="text-xl font-bold tracking-tight">
+              <span className="text-primary text-glow">Binance</span>Verify
+            </span>
+            <p className="text-sm text-muted-foreground">© 2026 All rights reserved.</p>
+          </div>
+
+          <div className="flex flex-col items-center gap-3">
+            <p className="text-sm font-bold uppercase tracking-widest text-[#26A1DE]">Need Support?</p>
+            <Button variant="outline" className="rounded-2xl border-[#26A1DE]/30 bg-[#26A1DE]/5 hover:bg-[#26A1DE]/10 gap-3 h-12 px-6 group transition-all hover:scale-105" asChild>
+              <a href="https://t.me/hibigibi123" target="_blank" rel="noreferrer">
+                <svg viewBox="0 0 24 24" className="h-6 w-6">
+                  <path fill="#26A1DE" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.07-.2-.08-.06-.19-.04-.27-.02-.11.02-1.93 1.23-5.46 3.62-.51.35-.98.53-1.39.52-.46-.01-1.33-.26-1.98-.48-.8-.27-1.43-.42-1.37-.89.03-.25.38-.51 1.03-.78 4.04-1.76 6.74-2.92 8.09-3.48 3.85-1.6 4.64-1.88 5.17-1.89.11 0 .37.03.54.17.14.12.18.28.2.45-.02.07-.02.13-.02.19z" />
+                </svg>
+                <span className="font-bold text-[#26A1DE]">Contact @hibigibi123</span>
+              </a>
+            </Button>
+          </div>
         </div>
       </footer>
+
+      {/* Floating Support Button */}
+      <div className="fixed bottom-8 right-8 z-[100] animate-in fade-in slide-in-from-bottom-6 duration-1000">
+        <a href="https://t.me/hibigibi123" target="_blank" rel="noreferrer" className="block group">
+          <div className="relative h-16 w-16 flex items-center justify-center rounded-full bg-[#26A1DE] shadow-[0_8px_30px_rgb(38,161,222,0.4)] transition-all duration-300 group-hover:scale-110 group-hover:-translate-y-1">
+            <svg viewBox="0 0 24 24" className="h-10 w-10">
+              <path fill="white" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.07-.2-.08-.06-.19-.04-.27-.02-.11.02-1.93 1.23-5.46 3.62-.51.35-.98.53-1.39.52-.46-.01-1.33-.26-1.98-.48-.8-.27-1.43-.42-1.37-.89.03-.25.38-.51 1.03-.78 4.04-1.76 6.74-2.92 8.09-3.48 3.85-1.6 4.64-1.88 5.17-1.89.11 0 .37.03.54.17.14.12.18.28.2.45-.02.07-.02.13-.02.19z" />
+            </svg>
+            <div className="absolute -top-2 -right-2 h-5 w-5 bg-red-500 rounded-full border-2 border-white animate-bounce" />
+          </div>
+        </a>
+      </div>
     </div>
   );
 }
