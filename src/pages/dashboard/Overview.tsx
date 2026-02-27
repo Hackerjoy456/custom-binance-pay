@@ -43,7 +43,14 @@ export default function Overview() {
   if (loading) return <div className="flex items-center justify-center min-h-[400px]"><div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent" /></div>;
 
   const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-  const defaultEndpoint = `https://${projectId}.supabase.co/functions/v1/verify-payment`;
+  const supabaseEndpoint = `https://${projectId}.supabase.co/functions/v1/verify-payment`;
+
+  const origin = typeof window !== "undefined" ? window.location.origin : null;
+  const isCustomDomain = origin ? !origin.includes(`${projectId}.supabase.co`) : false;
+  const defaultEndpoint = isCustomDomain && origin
+    ? `${origin}/api/verify-payment`
+    : supabaseEndpoint;
+
   const endpointUrl = customEndpoint || defaultEndpoint;
   const successRate = logCount > 0 ? Math.round((successCount / logCount) * 100) : 0;
 

@@ -1,8 +1,20 @@
 {
-    "rewrites": [
-        {
-            "source": "/(.*)",
-            "destination": "/"
-        }
-    ]
+  "rewrites": [
+    {
+      "source": "/api/verify-payment",
+      "destination": "https://ctccvbxarequrgcmmhpl.supabase.co/functions/v1/verify-payment"
+    },
+    {
+      "source": "/api/get-config",
+      "destination": "https://ctccvbxarequrgcmmhpl.supabase.co/functions/v1/get-config"
+    },
+    {
+      "source": "/api/binance-verify-sdk",
+      "destination": "https://ctccvbxarequrgcmmhpl.supabase.co/functions/v1/binance-verify-sdk"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/"
+    }
+  ]
 }

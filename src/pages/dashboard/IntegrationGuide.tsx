@@ -117,17 +117,44 @@ function InfoBox({ icon: Icon, title, children, variant = "info" }: {
 export default function IntegrationGuide() {
   const { user } = useAuth();
   const [apiKey, setApiKey] = useState<string | null>(null);
+  const [customEndpoint, setCustomEndpoint] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) return;
-    supabase.from("api_keys").select("api_key").eq("user_id", user.id).eq("is_active", true).limit(1)
-      .then(({ data }) => setApiKey(data?.[0]?.api_key || null));
+    Promise.all([
+      supabase.from("api_keys").select("api_key").eq("user_id", user.id).eq("is_active", true).limit(1),
+      supabase.from("api_configurations").select("custom_endpoint_url").eq("user_id", user.id).limit(1),
+    ]).then(([keyRes, configRes]) => {
+      setApiKey(keyRes.data?.[0]?.api_key || null);
+      setCustomEndpoint((configRes.data?.[0] as any)?.custom_endpoint_url || null);
+    });
   }, [user]);
 
   const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-  const endpoint = `https://${projectId}.supabase.co/functions/v1/verify-payment`;
-  const configEndpoint = `https://${projectId}.supabase.co/functions/v1/get-config`;
-  const sdkUrl = `https://${projectId}.supabase.co/functions/v1/binance-verify-sdk`;
+  const supabaseVerifyEndpoint = `https://${projectId}.supabase.co/functions/v1/verify-payment`;
+  const supabaseConfigEndpoint = `https://${projectId}.supabase.co/functions/v1/get-config`;
+  const supabaseSdkUrl = `https://${projectId}.supabase.co/functions/v1/binance-verify-sdk`;
+
+  const origin = typeof window !== "undefined" ? window.location.origin : null;
+  const isCustomDomain = origin ? !origin.includes(`${projectId}.supabase.co`) : false;
+
+  const defaultVerifyEndpoint = isCustomDomain && origin
+    ? `${origin}/api/verify-payment`
+    : supabaseVerifyEndpoint;
+
+  const defaultConfigEndpoint = isCustomDomain && origin
+    ? `${origin}/api/get-config`
+    : supabaseConfigEndpoint;
+
+  const defaultSdkUrl = isCustomDomain && origin
+    ? `${origin}/api/binance-verify-sdk`
+    : supabaseSdkUrl;
+
+  const endpoint = customEndpoint || defaultVerifyEndpoint;
+  const configEndpoint = customEndpoint
+    ? customEndpoint.replace(/verify-payment$/, "get-config")
+    : defaultConfigEndpoint;
+  const sdkUrl = defaultSdkUrl;
   const displayKey = apiKey || "YOUR_API_KEY";
   const publishedDomain = typeof window !== 'undefined' ? window.location.origin : "https://payment.offlinee.online";
   const checkoutUrl = user ? `${publishedDomain}/pay/${user.id}?amount=25.00&orderId=ORDER_12345&ts=${Date.now()}` : `${publishedDomain}/pay/YOUR_MERCHANT_ID?amount=25.00&ts=TIMESTAMP_MS`;
@@ -188,7 +215,7 @@ verifyPayment('prepay_id_123', 'binance_pay', 25.00);`;
   }
 </script>`;
 
-  const cfWorkerCode = `const TARGET_URL = "${endpoint}";
+  const cfWorkerCode = `const TARGET_URL = "${supabaseVerifyEndpoint}";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
