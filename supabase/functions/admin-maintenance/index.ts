@@ -45,11 +45,18 @@ Deno.serve(async (req) => {
     }
 
     // Check caller is admin
-    const { data: isAdmin } = await supabaseAdmin.rpc("has_role", {
+    const { data: isAdmin, error: roleError } = await supabaseAdmin.rpc("has_role", {
         _user_id: caller.id,
         _role: "admin",
     });
+
+    if (roleError) {
+        console.error("[AdminMaintenance] Role check error:", roleError);
+        return json({ error: "Authorization check failed: " + roleError.message }, 500);
+    }
+
     if (!isAdmin) {
+        console.warn(`[AdminMaintenance] User ${caller.id} is not an admin.`);
         return json({ error: "Unauthorized. Super Admin access required." }, 403);
     }
 

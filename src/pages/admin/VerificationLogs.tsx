@@ -72,9 +72,18 @@ export default function AdminVerificationLogs() {
       });
 
       if (error) {
-        // If it's a non-2xx error, the error object might have the message
-        const errorMessage = typeof error === 'object' ? JSON.stringify(error) : error;
-        throw new Error(errorMessage || "Edge Function invocation failed");
+        let msg = "Edge Function error";
+        if (error.message) msg = error.message;
+
+        // Attempt to extract body from FunctionsHttpError
+        const details = error as any;
+        if (details.context && typeof details.context.json === 'function') {
+          try {
+            const body = await details.context.json();
+            if (body.error) msg = body.error;
+          } catch (e) { }
+        }
+        throw new Error(msg);
       }
 
       if (data?.error) throw new Error(data.error);
