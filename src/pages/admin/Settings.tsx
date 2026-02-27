@@ -14,14 +14,21 @@ export default function AdminSettings() {
   const [settings, setSettings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [lastSavedPlans, setLastSavedPlans] = useState<any[] | null>(null);
+  const [lastSavedSettings, setLastSavedSettings] = useState<any[] | null>(null);
 
   const load = async () => {
     const [planRes, settRes] = await Promise.all([
       supabase.from("pricing_plans").select("*").order("price"),
       supabase.from("system_settings").select("*"),
     ]);
-    setPlans(planRes.data || []);
-    setSettings(settRes.data || []);
+    const loadedPlans = planRes.data || [];
+    const loadedSettings = settRes.data || [];
+
+    setPlans(loadedPlans);
+    setSettings(loadedSettings);
+    setLastSavedPlans(loadedPlans);
+    setLastSavedSettings(loadedSettings);
     setLoading(false);
   };
 
@@ -36,6 +43,7 @@ export default function AdminSettings() {
   };
 
   const handleSave = async () => {
+    if (saving) return;
     setSaving(true);
     try {
       for (const plan of plans) {
@@ -46,12 +54,28 @@ export default function AdminSettings() {
         const { error } = await supabase.from("system_settings").update({ value: setting.value }).eq("id", setting.id);
         if (error) throw error;
       }
+      setLastSavedPlans(plans);
+      setLastSavedSettings(settings);
       toast.success("All settings successfully synchronized! 🚀");
     } catch (e) {
       toast.error(safeError(e, "Failed to synchronize settings"));
     }
     setSaving(false);
   };
+
+  useEffect(() => {
+    if (loading || !lastSavedPlans || !lastSavedSettings) return;
+
+    const plansUnchanged = JSON.stringify(plans) === JSON.stringify(lastSavedPlans);
+    const settingsUnchanged = JSON.stringify(settings) === JSON.stringify(lastSavedSettings);
+    if (plansUnchanged && settingsUnchanged) return;
+
+    const timer = setTimeout(() => {
+      handleSave();
+    }, 2000);
+
+    return () => clearTimeout(timer);
+  }, [plans, settings, loading, lastSavedPlans, lastSavedSettings]);
 
   if (loading) return <div className="flex items-center justify-center min-h-[400px]"><div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent" /></div>;
 
