@@ -5,7 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { Activity, ShieldCheck, AlertCircle, Clock, Search, Filter, Download, Terminal, User, Hash, DollarSign } from "lucide-react";
+import { Activity, ShieldCheck, AlertCircle, Clock, Search, Filter, Download, Terminal, User, Hash, DollarSign, Trash2, ShieldX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -14,6 +14,7 @@ export default function AdminVerificationLogs() {
   const [profiles, setProfiles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [isDeleting, setIsDeleting] = useState<string | null>(null);
 
   useEffect(() => {
     Promise.all([
@@ -38,6 +39,26 @@ export default function AdminVerificationLogs() {
     const query = search.toLowerCase();
     return email.includes(query) || txId.includes(query);
   });
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this specific log entry? This action cannot be undone.")) return;
+
+    setIsDeleting(id);
+    try {
+      const { data, error } = await supabase.functions.invoke("admin-maintenance", {
+        body: { action: "delete_single", table: "payment_verification_logs", id }
+      });
+
+      if (error) throw error;
+
+      setLogs(logs.filter(l => l.id !== id));
+      toast.success("Log entry deleted successfully");
+    } catch (e: any) {
+      toast.error(e.message || "Failed to delete log entry");
+    } finally {
+      setIsDeleting(null);
+    }
+  };
 
   if (loading) return <div className="flex items-center justify-center min-h-[400px]"><div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent" /></div>;
 
@@ -103,6 +124,7 @@ export default function AdminVerificationLogs() {
                     <TableHead className="py-5 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Method</TableHead>
                     <TableHead className="py-5 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Amount (Exp/Act)</TableHead>
                     <TableHead className="py-5 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Result</TableHead>
+                    <TableHead className="py-5 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground text-center">Actions</TableHead>
                     <TableHead className="py-5 pr-8 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground text-right">Timestamp</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -160,6 +182,17 @@ export default function AdminVerificationLogs() {
                             </Badge>
                           )}
                         </div>
+                      </TableCell>
+                      <TableCell className="py-5 text-center">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                          onClick={() => handleDelete(log.id)}
+                          disabled={isDeleting === log.id}
+                        >
+                          {isDeleting === log.id ? <Clock className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                        </Button>
                       </TableCell>
                       <TableCell className="py-5 pr-8 text-right">
                         <div className="flex flex-col items-end">

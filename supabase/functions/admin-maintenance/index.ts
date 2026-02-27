@@ -83,7 +83,20 @@ Deno.serve(async (req) => {
             return json({ success: true, message: "All used transaction records have been cleared." });
         }
 
-        return json({ error: "Unknown action. Use 'clear_logs' or 'clear_used_transactions'" }, 400);
+        if (action === "delete_single") {
+            const { table, id } = body;
+            if (!table || !id) return json({ error: "Table and ID are required" }, 400);
+
+            const { error } = await supabaseAdmin
+                .from(table)
+                .delete()
+                .eq("id", id);
+
+            if (error) throw error;
+            return json({ success: true, message: `Record deleted from ${table}.` });
+        }
+
+        return json({ error: "Unknown action. Use 'clear_logs', 'clear_used_transactions', or 'delete_single'" }, 400);
     } catch (e) {
         return json({ error: "Failed to perform maintenance: " + e.message }, 500);
     }
