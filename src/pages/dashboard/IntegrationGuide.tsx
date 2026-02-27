@@ -422,6 +422,7 @@ export default {
                     <TabsList className="bg-muted/50 p-1 rounded-xl h-10 w-fit flex gap-1 mb-3">
                       <TabsTrigger value="javascript" className="text-[10px] rounded-lg">Node.js</TabsTrigger>
                       <TabsTrigger value="php" className="text-[10px] rounded-lg">PHP</TabsTrigger>
+                      <TabsTrigger value="python" className="text-[10px] rounded-lg">Python</TabsTrigger>
                     </TabsList>
                     <TabsContent value="javascript">
                       <CodeBlock
@@ -444,14 +445,33 @@ $amount = "50.00";
 $order_id = "ORD-" . time();
 $success_url = urlencode("https://yoursite.com/thank-you");
 $merchant_id = "${user?.id || "YOUR_MERCHANT_ID"}";
+$gateway_url = "https://payment.offlinee.online";
 
-$payment_link = "${publishedDomain}/pay/{$merchant_id}?amount={$amount}&orderId={$order_id}&successUrl={$success_url}";
+$payment_link = "{$gateway_url}/pay/{$merchant_id}?amount={$amount}&orderId={$order_id}&successUrl={$success_url}";
 
 // Redirect the user
 header("Location: " . $payment_link);
 exit;
 ?>`}
                         language="php"
+                      />
+                    </TabsContent>
+                    <TabsContent value="python">
+                      <CodeBlock
+                        code={`from urllib.parse import quote
+import time
+
+amount = "50.00"
+order_id = f"ORD-{int(time.time() * 1000)}"
+success_url = quote("https://yoursite.com/thank-you", safe="")
+merchant_id = "${user?.id || "YOUR_MERCHANT_ID"}"
+gateway_url = "https://payment.offlinee.online"
+
+payment_link = f"{gateway_url}/pay/{merchant_id}?amount={amount}&orderId={order_id}&successUrl={success_url}"
+
+# Redirect the user (e.g., using Flask or Django)
+# return redirect(payment_link)`}
+                        language="python"
                       />
                     </TabsContent>
                   </Tabs>
