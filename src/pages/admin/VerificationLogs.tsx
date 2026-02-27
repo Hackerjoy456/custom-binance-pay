@@ -8,6 +8,7 @@ import { format } from "date-fns";
 import { Activity, ShieldCheck, AlertCircle, Clock, Search, Filter, Download, Terminal, User, Hash, DollarSign, Trash2, ShieldX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import Swal from "sweetalert2";
 
 export default function AdminVerificationLogs() {
   const [logs, setLogs] = useState<any[]>([]);
@@ -41,7 +42,24 @@ export default function AdminVerificationLogs() {
   });
 
   const handleRelease = async (log: any) => {
-    if (!confirm(`Are you sure you want to release transaction ${log.transaction_id || 'unnamed'}? This will delete the log AND allow it to be verified again.`)) return;
+    const result = await Swal.fire({
+      title: "Release Transaction?",
+      text: `This will remove the log entry for ${log.transaction_id || 'unnamed'} and allow it to be verified again by the system.`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#ec4899",
+      cancelButtonColor: "#64748b",
+      confirmButtonText: "Yes, release it!",
+      background: "#0f172a",
+      color: "#f8fafc",
+      customClass: {
+        popup: "rounded-[2rem] border border-border/40 backdrop-blur-xl",
+        confirmButton: "rounded-xl px-6 py-3 font-black uppercase tracking-widest text-xs",
+        cancelButton: "rounded-xl px-6 py-3 font-black uppercase tracking-widest text-xs"
+      }
+    });
+
+    if (!result.isConfirmed) return;
 
     setIsDeleting(log.id);
     try {
@@ -53,12 +71,40 @@ export default function AdminVerificationLogs() {
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        // If it's a non-2xx error, the error object might have the message
+        const errorMessage = typeof error === 'object' ? JSON.stringify(error) : error;
+        throw new Error(errorMessage || "Edge Function invocation failed");
+      }
+
+      if (data?.error) throw new Error(data.error);
 
       setLogs(logs.filter(l => l.id !== log.id));
-      toast.success("Transaction released and log removed");
+
+      await Swal.fire({
+        title: "Released!",
+        text: "The transaction has been successfully cleared from the registry.",
+        icon: "success",
+        timer: 2000,
+        showConfirmButton: false,
+        background: "#0f172a",
+        color: "#f8fafc",
+        customClass: {
+          popup: "rounded-[2rem] border border-border/40 backdrop-blur-xl"
+        }
+      });
     } catch (e: any) {
-      toast.error(e.message || "Failed to release transaction");
+      console.error("Release error:", e);
+      Swal.fire({
+        title: "Operation Failed",
+        text: e.message || "An unexpected error occurred during the release process.",
+        icon: "error",
+        background: "#0f172a",
+        color: "#f8fafc",
+        customClass: {
+          popup: "rounded-[2rem] border border-border/40 backdrop-blur-xl"
+        }
+      });
     } finally {
       setIsDeleting(null);
     }

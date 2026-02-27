@@ -112,6 +112,7 @@ Deno.serve(async (req) => {
 
         return json({ error: "Unknown action. Use 'clear_logs', 'clear_used_transactions', 'release_transaction', or 'delete_single'" }, 400);
     } catch (e) {
-        return json({ error: "Failed to perform maintenance: " + e.message }, 500);
+        console.error("Maintenance Error:", e);
+        return json({ error: e.message || "An unexpected error occurred in the edge function." }, 500);
     }
 });
