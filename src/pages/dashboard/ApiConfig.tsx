@@ -10,7 +10,7 @@ import { safeError } from "@/lib/safe-error";
 import {
   Save, Upload, Shield, Wallet, CreditCard, Globe, AlertCircle,
   CheckCircle2, AlertTriangle, EyeOff, Eye, Image as ImageIcon,
-  ArrowRight, Info, Terminal, RefreshCw, Key
+  ArrowRight, Info, Terminal, RefreshCw, Key, Bell, Send, MessageSquare
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
@@ -24,6 +24,9 @@ export default function ApiConfig() {
     image_url: "",
     bep20_image_url: "",
     custom_endpoint_url: "",
+    telegram_token: "",
+    telegram_chat_id: "",
+    discord_webhook_url: "",
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -46,6 +49,9 @@ export default function ApiConfig() {
           image_url: data.image_url || "",
           bep20_image_url: (data as any).bep20_image_url || "",
           custom_endpoint_url: (data as any).custom_endpoint_url || "",
+          telegram_token: (data as any).telegram_token || "",
+          telegram_chat_id: (data as any).telegram_chat_id || "",
+          discord_webhook_url: (data as any).discord_webhook_url || "",
         };
         setConfig(loadedConfig);
         setLastSavedConfig(loadedConfig);
@@ -77,13 +83,16 @@ export default function ApiConfig() {
       image_url: config.image_url,
       bep20_image_url: config.bep20_image_url,
       custom_endpoint_url: config.custom_endpoint_url || null,
+      telegram_token: config.telegram_token || null,
+      telegram_chat_id: config.telegram_chat_id || null,
+      discord_webhook_url: config.discord_webhook_url || null,
     } as any, { onConflict: "user_id" });
 
     if (error) {
       toast.error(safeError(error, "Failed to synchronize configuration"));
     } else {
       setLastSavedConfig(config);
-      toast.info("Cloud synchronization complete.");
+      toast.success("Cloud synchronization complete.");
     }
     setSaving(false);
   };
@@ -315,6 +324,67 @@ export default function ApiConfig() {
           </div>
         </div>
 
+        {/* Notification Webhooks Card */}
+        <Card className="rounded-[2.5rem] border-border/40 bg-card/40 backdrop-blur-sm overflow-hidden border-l-4 border-l-emerald-500 shadow-xl">
+          <CardHeader className="p-8 pb-4">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
+                <Bell className="h-6 w-6 text-emerald-500" />
+              </div>
+              <div>
+                <CardTitle className="text-xl font-black">Notification Webhooks</CardTitle>
+                <CardDescription className="font-bold opacity-70">Get real-time alerts for payment verifications.</CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="p-8 pt-4 space-y-8">
+            <div className="grid md:grid-cols-2 gap-8">
+              {/* Telegram Set */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <Send className="h-4 w-4 text-[#26A1DE]" />
+                  <span className="text-xs font-black uppercase tracking-widest text-[#26A1DE]">Telegram Alert Bot</span>
+                </div>
+                <div className="space-y-3">
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Bot API Token</Label>
+                  <Input
+                    value={config.telegram_token}
+                    onChange={(e) => setConfig(c => ({ ...c, telegram_token: e.target.value }))}
+                    placeholder="58392...:AA..."
+                    className="h-12 rounded-xl bg-background border-border font-mono text-xs"
+                  />
+                </div>
+                <div className="space-y-3">
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Recipient Chat ID</Label>
+                  <Input
+                    value={config.telegram_chat_id}
+                    onChange={(e) => setConfig(c => ({ ...c, telegram_chat_id: e.target.value }))}
+                    placeholder="-100..."
+                    className="h-12 rounded-xl bg-background border-border font-mono text-xs"
+                  />
+                </div>
+              </div>
+
+              {/* Discord Set */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <MessageSquare className="h-4 w-4 text-[#5865F2]" />
+                  <span className="text-xs font-black uppercase tracking-widest text-[#5865F2]">Discord Webhook</span>
+                </div>
+                <div className="space-y-3">
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Webhook URL</Label>
+                  <Input
+                    value={config.discord_webhook_url}
+                    onChange={(e) => setConfig(c => ({ ...c, discord_webhook_url: e.target.value }))}
+                    placeholder="https://discord.com/api/webhooks/..."
+                    className="h-12 rounded-xl bg-background border-border font-mono text-xs"
+                  />
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Global Proxy Routing Card */}
         <Card className="rounded-[2.5rem] border-border/40 bg-card/40 backdrop-blur-sm overflow-hidden border-l-4 border-l-slate-400 group shadow-xl">
           <CardHeader className="p-8 pb-4">
@@ -366,6 +436,6 @@ export default function ApiConfig() {
           Save All Configurations
         </Button>
       </div>
-    </div>
+    </div >
   );
 }

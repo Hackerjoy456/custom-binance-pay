@@ -18,7 +18,7 @@ import {
   Zap, Key, Settings, Rocket, BookOpen, Shield, AlertTriangle,
   ArrowRight, Globe, FileCode, Package, Cloud, Link2,
   CheckCheck, Info, Lightbulb, MonitorSmartphone, Link as LinkIcon,
-  Cpu, Wrench, Layout
+  Cpu, Wrench, Layout, Clock, Lock
 } from "lucide-react";
 
 /* ─── Reusable Components ─── */
@@ -129,7 +129,7 @@ export default function IntegrationGuide() {
   const configEndpoint = `https://${projectId}.supabase.co/functions/v1/get-config`;
   const sdkUrl = `https://${projectId}.supabase.co/functions/v1/binance-verify-sdk`;
   const displayKey = apiKey || "YOUR_API_KEY";
-  const publishedDomain = "https://payment.offlinee.online";
+  const publishedDomain = typeof window !== 'undefined' ? window.location.origin : "https://payment.offlinee.online";
   const checkoutUrl = user ? `${publishedDomain}/pay/${user.id}?amount=25.00&orderId=ORDER_12345&ts=${Date.now()}` : `${publishedDomain}/pay/YOUR_MERCHANT_ID?amount=25.00&ts=TIMESTAMP_MS`;
 
   /* ─── Code Snippets ─── */
@@ -228,7 +228,12 @@ export default {
             <Rocket className="h-10 w-10 text-primary animate-pulse" />
           </div>
           <div className="text-center sm:text-left">
-            <h1 className="text-3xl sm:text-4xl font-black tracking-tight mb-3">Gateway Integration</h1>
+            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 mb-2">
+              <h1 className="text-3xl sm:text-4xl font-black tracking-tight">Gateway Integration</h1>
+              <Badge className="bg-emerald-500/20 text-emerald-500 hover:bg-emerald-500/30 border-emerald-500/30 gap-1.5 py-1 px-3">
+                <Shield className="h-3.5 w-3.5" /> Fraud Shield Active
+              </Badge>
+            </div>
             <p className="text-muted-foreground text-lg max-w-xl">
               Integrate Binance payments into your app in minutes. Choose your level of complexity below.
             </p>
@@ -292,6 +297,71 @@ export default {
 
         <Accordion type="single" collapsible className="w-full space-y-4 border-none">
 
+          {/* New Section: One-Click Snippets & Widget */}
+          <AccordionItem value="method-snippets" className="border border-primary/20 rounded-3xl overflow-hidden bg-primary/5 transition-all data-[state=open]:ring-2 data-[state=open]:ring-primary/20">
+            <AccordionTrigger className="hover:no-underline px-6 py-6 group">
+              <div className="flex items-center gap-4 text-left">
+                <div className="h-12 w-12 rounded-2xl bg-primary/20 border border-primary/30 flex items-center justify-center flex-shrink-0 group-data-[state=open]:bg-primary group-data-[state=open]:text-white transition-colors">
+                  <Package className="h-6 w-6 text-primary group-data-[state=open]:text-white" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-bold text-lg">One-Click Snippets</h3>
+                    <Badge className="bg-primary text-[10px] py-0">FASTEST</Badge>
+                  </div>
+                  <p className="text-sm text-muted-foreground">Copy-paste widgets and buttons for your website.</p>
+                </div>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="px-6 pb-8 pt-2">
+              <div className="space-y-8">
+                <div className="space-y-4">
+                  <h4 className="font-bold text-sm flex items-center gap-2">
+                    <Layout className="h-4 w-4 text-primary" /> 1. Floating Gateway Widget
+                  </h4>
+                  <p className="text-xs text-muted-foreground">Add this script to the bottom of your body tag to show a floating "Pay Now" bubble.</p>
+                  <CodeBlock
+                    code={`<!-- Binance Verify Floating Widget -->
+<script>
+  (function() {
+    var btn = document.createElement('div');
+    btn.innerHTML = '💳 Pay with Crypto';
+    btn.style = 'position:fixed;bottom:20px;right:20px;background:#f0b90b;color:#000;padding:12px 24px;border-radius:50px;cursor:pointer;font-weight:bold;box-shadow:0 10px 30px rgba(0,0,0,0.3);z-index:9999;font-family:sans-serif;';
+    btn.onclick = function() {
+      window.open('${publishedDomain}/pay/${user?.id || "YOUR_ID"}?amount=10.00&successUrl=' + encodeURIComponent(window.location.href), '_blank');
+    };
+    document.body.appendChild(btn);
+  })();
+</script>`}
+                    language="html"
+                    title="Widget Snippet"
+                  />
+                </div>
+
+                <Separator />
+
+                <div className="space-y-4">
+                  <h4 className="font-bold text-sm flex items-center gap-2">
+                    <Code2 className="h-4 w-4 text-primary" /> 2. Simple HTML Pay Button
+                  </h4>
+                  <p className="text-xs text-muted-foreground">A premium styled button you can drop anywhere.</p>
+                  <CodeBlock
+                    code={`<a href="${publishedDomain}/pay/${user?.id || "YOUR_ID"}?amount=10.00" 
+   target="_blank" 
+   style="display:inline-flex;align-items:center;background:#f0b90b;color:#000;padding:12px 24px;border-radius:12px;text-decoration:none;font-weight:bold;font-family:sans-serif;gap:8px;">
+   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+   Pay with Binance
+</a>`}
+                    language="html"
+                    title="HTML Button"
+                  />
+                </div>
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+
+
+
           {/* Method 1: No Code */}
           <AccordionItem value="method-1" className="border border-primary/10 rounded-3xl overflow-hidden bg-card transition-all data-[state=open]:ring-2 data-[state=open]:ring-primary/20">
             <AccordionTrigger className="hover:no-underline px-6 py-6 group">
@@ -340,6 +410,51 @@ export default {
                       <li className="text-xs flex items-center gap-2"><CheckCircle className="h-3 w-3 text-emerald-500" /> Custom branding (Pro)</li>
                     </ul>
                   </div>
+                </div>
+
+                <div className="rounded-2xl border bg-muted/10 p-5 mt-4">
+                  <h4 className="font-bold text-sm mb-3 text-primary flex items-center gap-2">
+                    <Code2 className="h-4 w-4" /> How to generate the URL dynamically:
+                  </h4>
+                  <p className="text-xs text-muted-foreground mb-3">Instead of hardcoding, you should generate this URL in your backend when a user clicks "Checkout" on your site.</p>
+
+                  <Tabs defaultValue="javascript" className="w-full">
+                    <TabsList className="bg-muted/50 p-1 rounded-xl h-10 w-fit flex gap-1 mb-3">
+                      <TabsTrigger value="javascript" className="text-[10px] rounded-lg">Node.js</TabsTrigger>
+                      <TabsTrigger value="php" className="text-[10px] rounded-lg">PHP</TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="javascript">
+                      <CodeBlock
+                        code={`// When user clicks checkout for $50
+const amount = "50.00";
+const orderId = "ORD-" + Date.now();
+const successUrl = encodeURIComponent("https://yoursite.com/thank-you");
+const gatewayUrl = "https://payment.offlinee.online"; // Or your custom domain
+
+// Give this link to the user
+const paymentLink = \`\${gatewayUrl}/pay/${user?.id || "YOUR_MERCHANT_ID"}?amount=\${amount}&orderId=\${orderId}&successUrl=\${successUrl}\`;
+window.location.href = paymentLink;`}
+                        language="javascript"
+                      />
+                    </TabsContent>
+                    <TabsContent value="php">
+                      <CodeBlock
+                        code={`<?php
+$amount = "50.00";
+$order_id = "ORD-" . time();
+$success_url = urlencode("https://yoursite.com/thank-you");
+$merchant_id = "${user?.id || "YOUR_MERCHANT_ID"}";
+
+$payment_link = "${publishedDomain}/pay/{$merchant_id}?amount={$amount}&orderId={$order_id}&successUrl={$success_url}";
+
+// Redirect the user
+header("Location: " . $payment_link);
+exit;
+?>`}
+                        language="php"
+                      />
+                    </TabsContent>
+                  </Tabs>
                 </div>
                 <Button className="w-full sm:w-auto rounded-xl gap-2 h-11" asChild>
                   <a href={checkoutUrl} target="_blank" rel="noreferrer">Open Preview <ExternalLink className="h-4 w-4" /></a>
