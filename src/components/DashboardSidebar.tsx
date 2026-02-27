@@ -51,10 +51,10 @@ export function DashboardSidebar() {
           </div>
           <div className="flex flex-col">
             <span className="text-xl font-black tracking-tight leading-none italic">
-              GATEWAY
+              BINANCE
             </span>
             <span className="text-[10px] font-black uppercase tracking-[0.3em] text-primary mt-1">
-              Verified
+              Verify
             </span>
           </div>
         </div>
