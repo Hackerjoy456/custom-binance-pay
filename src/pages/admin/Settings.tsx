@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { safeError } from "@/lib/safe-error";
-import { Save, Shield, CreditCard, Cog, Globe, Wallet, Zap, Key, Server, Info, Terminal, AlertCircle } from "lucide-react";
+import { Save, Shield, CreditCard, Cog, Globe, Wallet, Zap, Key, Server, Info, Terminal, AlertCircle, Trash2, Database } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 export default function AdminSettings() {
@@ -16,6 +16,8 @@ export default function AdminSettings() {
   const [saving, setSaving] = useState(false);
   const [lastSavedPlans, setLastSavedPlans] = useState<any[] | null>(null);
   const [lastSavedSettings, setLastSavedSettings] = useState<any[] | null>(null);
+  const [clearingLogs, setClearingLogs] = useState(false);
+  const [clearingTransactions, setClearingTransactions] = useState(false);
 
   const load = async () => {
     const [planRes, settRes] = await Promise.all([
@@ -61,6 +63,29 @@ export default function AdminSettings() {
       toast.error(safeError(e, "Failed to synchronize settings"));
     }
     setSaving(false);
+  };
+
+  const handleClearData = async (action: "clear_logs" | "clear_used_transactions") => {
+    const isLogs = action === "clear_logs";
+    const setStatus = isLogs ? setClearingLogs : setClearingTransactions;
+
+    if (!confirm(`Are you absolutely sure? This will permanently delete ALL ${isLogs ? 'verification logs' : 'used transaction records'} from the system.`)) {
+      return;
+    }
+
+    setStatus(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("admin-maintenance", {
+        body: { action }
+      });
+
+      if (error) throw error;
+      toast.success(data.message || "Operation successful");
+    } catch (e: any) {
+      toast.error(safeError(e, "Maintenance action failed"));
+    } finally {
+      setStatus(false);
+    }
   };
 
   useEffect(() => {
@@ -179,6 +204,66 @@ export default function AdminSettings() {
           <CardFooter className="bg-amber-500/5 p-6 border-t border-border/40 rounded-b-[2rem] flex items-center gap-3">
             <AlertCircle className="h-5 w-5 text-amber-500 shrink-0" />
             <p className="text-xs font-bold text-amber-600/80 uppercase tracking-tight">Warning: Changes here impact live payment routing. Verify all addresses before syncing.</p>
+          </CardFooter>
+        </Card>
+
+        {/* Maintenance Module */}
+        <Card className="rounded-[2rem] border-destructive/20 bg-card/40 backdrop-blur-sm overflow-hidden border-l-4 border-l-destructive">
+          <CardHeader className="bg-destructive/5 p-8 border-b border-border/40">
+            <div className="flex items-center gap-4">
+              <div className="h-12 w-12 rounded-2xl bg-destructive/10 flex items-center justify-center shadow-inner">
+                <Trash2 className="h-6 w-6 text-destructive" />
+              </div>
+              <div className="space-y-0.5">
+                <CardTitle className="text-xl font-black text-destructive">Maintenance & Diagnostics</CardTitle>
+                <CardDescription className="text-sm font-bold opacity-70">Super Admin tools for system testing and cleanup.</CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="p-8 space-y-8">
+            <div className="grid md:grid-cols-2 gap-8">
+              {/* Reset Logs */}
+              <div className="flex flex-col gap-4 p-6 rounded-2xl bg-muted/20 border border-border/30 group hover:border-destructive/30 transition-colors">
+                <div className="flex items-center gap-3">
+                  <Terminal className="h-5 w-5 text-muted-foreground group-hover:text-destructive transition-colors" />
+                  <p className="font-black text-xs uppercase tracking-widest">Reset Verification Logs</p>
+                </div>
+                <p className="text-xs font-medium text-muted-foreground leading-relaxed">
+                  Purge all historical telemetry data and verification records. Use this to clear the "Usage Telemetry" dashboard.
+                </p>
+                <Button
+                  variant="destructive"
+                  disabled={clearingLogs}
+                  onClick={() => handleClearData("clear_logs")}
+                  className="mt-2 rounded-xl h-12 font-black shadow-xl shadow-destructive/10"
+                >
+                  {clearingLogs ? "Purging Registry..." : "Purge All Logs"}
+                </Button>
+              </div>
+
+              {/* Reset Transactions */}
+              <div className="flex flex-col gap-4 p-6 rounded-2xl bg-muted/20 border border-border/30 group hover:border-destructive/30 transition-colors">
+                <div className="flex items-center gap-3">
+                  <Database className="h-5 w-5 text-muted-foreground group-hover:text-destructive transition-colors" />
+                  <p className="font-black text-xs uppercase tracking-widest">Wipe Used Transactions</p>
+                </div>
+                <p className="text-xs font-medium text-muted-foreground leading-relaxed">
+                  Clear all "Already Verified" transaction IDs. This allows previously used payments to be verified again for testing.
+                </p>
+                <Button
+                  variant="destructive"
+                  disabled={clearingTransactions}
+                  onClick={() => handleClearData("clear_used_transactions")}
+                  className="mt-2 rounded-xl h-12 font-black shadow-xl shadow-destructive/10"
+                >
+                  {clearingTransactions ? "Clearing Database..." : "Wipe All Transactions"}
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+          <CardFooter className="bg-destructive/5 p-6 border-t border-border/40 rounded-b-[2rem] flex items-center gap-3">
+            <Shield className="h-5 w-5 text-destructive animate-pulse shrink-0" />
+            <p className="text-[10px] font-black text-destructive uppercase tracking-[0.2em]">Restricted to Super Admin Identity Only</p>
           </CardFooter>
         </Card>
 

@@ -1,0 +1,90 @@
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const corsHeaders = {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Headers":
+        "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+};
+
+function json(body: unknown, status = 200) {
+    return new Response(JSON.stringify(body), {
+        status,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+}
+
+Deno.serve(async (req) => {
+    if (req.method === "OPTIONS") {
+        return new Response(null, { headers: corsHeaders });
+    }
+    if (req.method !== "POST") {
+        return json({ error: "Method not allowed" }, 405);
+    }
+
+    // Verify caller is authenticated admin
+    const authHeader = req.headers.get("Authorization") || req.headers.get("authorization");
+    if (!authHeader) {
+        return json({ error: "Not authenticated" }, 401);
+    }
+
+    const supabaseAdmin = createClient(
+        Deno.env.get("SUPABASE_URL")!,
+        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
+
+    const supabaseUser = createClient(
+        Deno.env.get("SUPABASE_URL")!,
+        Deno.env.get("SUPABASE_ANON_KEY")!,
+        { global: { headers: { Authorization: authHeader } } }
+    );
+
+    // Get caller
+    const { data: { user: caller } } = await supabaseUser.auth.getUser();
+    if (!caller) {
+        return json({ error: "Not authenticated" }, 401);
+    }
+
+    // Check caller is admin
+    const { data: isAdmin } = await supabaseAdmin.rpc("has_role", {
+        _user_id: caller.id,
+        _role: "admin",
+    });
+    if (!isAdmin) {
+        return json({ error: "Unauthorized. Super Admin access required." }, 403);
+    }
+
+    let body: any;
+    try {
+        body = await req.json();
+    } catch {
+        return json({ error: "Invalid request" }, 400);
+    }
+
+    const { action } = body;
+
+    try {
+        if (action === "clear_logs") {
+            const { error } = await supabaseAdmin
+                .from("payment_verification_logs")
+                .delete()
+                .neq("id", "00000000-0000-0000-0000-000000000000");
+
+            if (error) throw error;
+            return json({ success: true, message: "All verification logs have been purged." });
+        }
+
+        if (action === "clear_used_transactions") {
+            const { error } = await supabaseAdmin
+                .from("used_transactions")
+                .delete()
+                .neq("id", "00000000-0000-0000-0000-000000000000");
+
+            if (error) throw error;
+            return json({ success: true, message: "All used transaction records have been cleared." });
+        }
+
+        return json({ error: "Unknown action. Use 'clear_logs' or 'clear_used_transactions'" }, 400);
+    } catch (e) {
+        return json({ error: "Failed to perform maintenance: " + e.message }, 500);
+    }
+});
