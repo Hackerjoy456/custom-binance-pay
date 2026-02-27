@@ -75,13 +75,17 @@ export default function AdminVerificationLogs() {
         let msg = "Edge Function error";
         if (error.message) msg = error.message;
 
-        // Attempt to extract body from FunctionsHttpError
+        // Handle FunctionsHttpError explicitly
         const details = error as any;
         if (details.context && typeof details.context.json === 'function') {
           try {
             const body = await details.context.json();
+            console.log("Error body:", body);
             if (body.error) msg = body.error;
-          } catch (e) { }
+            else if (body.message) msg = body.message;
+          } catch (e) {
+            console.error("Failed to parse error body", e);
+          }
         }
         throw new Error(msg);
       }
@@ -316,11 +320,35 @@ export default function AdminVerificationLogs() {
                 if (result.isConfirmed) {
                   try {
                     const { data, error } = await supabase.functions.invoke("admin-maintenance", { body: { action: "clear_logs" } });
-                    if (error) throw error;
+                    if (error) {
+                      let msg = error.message || "Failed to purge logs";
+                      const details = error as any;
+                      if (details.context && typeof details.context.json === 'function') {
+                        try {
+                          const body = await details.context.json();
+                          if (body.error) msg = body.error;
+                        } catch (err) { }
+                      }
+                      throw new Error(msg);
+                    }
+                    if (data?.error) throw new Error(data.error);
+
                     setLogs([]);
-                    Swal.fire({ title: "Purged", icon: "success", background: "#0f172a", color: "#f8fafc" });
+                    Swal.fire({
+                      title: "Registry Purged",
+                      text: "All telemetry logs have been securely wiped.",
+                      icon: "success",
+                      background: "#0f172a",
+                      color: "#f8fafc"
+                    });
                   } catch (e: any) {
-                    Swal.fire({ title: "Error", text: e.message || "Failed to purge logs", icon: "error", background: "#0f172a", color: "#f8fafc" });
+                    Swal.fire({
+                      title: "Purge Failed",
+                      text: e.message,
+                      icon: "error",
+                      background: "#0f172a",
+                      color: "#f8fafc"
+                    });
                   }
                 }
               }}

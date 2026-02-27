@@ -24,7 +24,8 @@ Deno.serve(async (req) => {
     // Verify caller is authenticated admin
     const authHeader = req.headers.get("Authorization") || req.headers.get("authorization");
     if (!authHeader) {
-        return json({ error: "Not authenticated" }, 401);
+        console.error("[AdminMaintenance] Missing Authorization header");
+        return json({ error: "Not authenticated: Missing header" }, 401);
     }
 
     const supabaseAdmin = createClient(
@@ -39,10 +40,13 @@ Deno.serve(async (req) => {
     );
 
     // Get caller
-    const { data: { user: caller } } = await supabaseUser.auth.getUser();
-    if (!caller) {
-        return json({ error: "Not authenticated" }, 401);
+    const { data: { user: caller }, error: userError } = await supabaseUser.auth.getUser();
+    if (userError || !caller) {
+        console.error("[AdminMaintenance] User verification failed:", userError);
+        return json({ error: "Not authenticated: Verification failed" }, 401);
     }
+
+    console.log(`[AdminMaintenance] Verifying roles for user: ${caller.id} (${caller.email})`);
 
     // Check caller is admin
     const { data: isAdmin, error: roleError } = await supabaseAdmin.rpc("has_role", {
@@ -51,13 +55,13 @@ Deno.serve(async (req) => {
     });
 
     if (roleError) {
-        console.error("[AdminMaintenance] Role check error:", roleError);
-        return json({ error: "Authorization check failed: " + roleError.message }, 500);
+        console.error("[AdminMaintenance] Role RPC error:", roleError);
+        return json({ error: "Role check failed: " + roleError.message }, 500);
     }
 
     if (!isAdmin) {
-        console.warn(`[AdminMaintenance] User ${caller.id} is not an admin.`);
-        return json({ error: "Unauthorized. Super Admin access required." }, 403);
+        console.warn(`[AdminMaintenance] Access denied for user: ${caller.id}`);
+        return json({ error: "Super Admin privileges required for this sector." }, 403);
     }
 
     let body: any;
