@@ -61,8 +61,12 @@ Deno.serve(async (req) => {
     }
 
     const { action } = body;
+    console.log(`[AdminMaintenance] Action: ${action}, User: ${caller.id}`);
 
     try {
+        if (action === "test") {
+            return json({ success: true, message: "Connection successful!", admin_id: caller.id });
+        }
         if (action === "clear_logs") {
             const { error } = await supabaseAdmin
                 .from("payment_verification_logs")

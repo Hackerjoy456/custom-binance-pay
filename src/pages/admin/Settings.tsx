@@ -6,7 +6,8 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { safeError } from "@/lib/safe-error";
-import { Save, Shield, CreditCard, Cog, Globe, Wallet, Zap, Key, Server, Info, Terminal, AlertCircle, Trash2, Database } from "lucide-react";
+import Swal from "sweetalert2";
+import { Save, Shield, CreditCard, Cog, Globe, Wallet, Zap, Key, Server, Info, Terminal, AlertCircle, Trash2, Database, Wifi } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 export default function AdminSettings() {
@@ -69,9 +70,18 @@ export default function AdminSettings() {
     const isLogs = action === "clear_logs";
     const setStatus = isLogs ? setClearingLogs : setClearingTransactions;
 
-    if (!confirm(`Are you absolutely sure? This will permanently delete ALL ${isLogs ? 'verification logs' : 'used transaction records'} from the system.`)) {
-      return;
-    }
+    const result = await Swal.fire({
+      title: "Security Clearance Required",
+      text: `Are you absolutely certain? This will permanently wipe ALL ${isLogs ? 'telemetry logs' : 'used transaction records'} from the system.`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#ef4444",
+      confirmButtonText: "Yes, execute purge",
+      background: "#0f172a",
+      color: "#f8fafc",
+    });
+
+    if (!result.isConfirmed) return;
 
     setStatus(true);
     try {
@@ -80,11 +90,57 @@ export default function AdminSettings() {
       });
 
       if (error) throw error;
-      toast.success(data.message || "Operation successful");
+      if (data?.error) throw new Error(data.error);
+
+      await Swal.fire({
+        title: "Protocol Success",
+        text: data.message || "Operation successful",
+        icon: "success",
+        background: "#0f172a",
+        color: "#f8fafc",
+      });
     } catch (e: any) {
-      toast.error(safeError(e, "Maintenance action failed"));
+      console.error("Maintenance failure:", e);
+      let msg = e.message || "Action failed";
+      try {
+        if (e.context && typeof e.context.json === 'function') {
+          const body = await e.context.json();
+          if (body.error) msg = body.error;
+        }
+      } catch (err) { }
+      Swal.fire({ title: "System Error", text: msg, icon: "error", background: "#0f172a", color: "#f8fafc" });
     } finally {
       setStatus(false);
+    }
+  };
+
+  const handleTestConnection = async () => {
+    const loadingToast = toast.loading("Pinging maintenance gateway...");
+    try {
+      const { data, error } = await supabase.functions.invoke("admin-maintenance", {
+        body: { action: "test" }
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      toast.dismiss(loadingToast);
+      Swal.fire({
+        title: "Link Active",
+        text: `Secure connection established. Admin ID verified: ${data.admin_id}`,
+        icon: "success",
+        background: "#0f172a",
+        color: "#f8fafc",
+      });
+    } catch (e: any) {
+      toast.dismiss(loadingToast);
+      let msg = e.message || "Connection failed";
+      try {
+        if (e.context && typeof e.context.json === 'function') {
+          const body = await e.context.json().catch(() => ({}));
+          if (body.error) msg = body.error;
+        }
+      } catch (err) { }
+      Swal.fire({ title: "Link Failure", text: msg, icon: "error", background: "#0f172a", color: "#f8fafc" });
     }
   };
 
@@ -112,13 +168,22 @@ export default function AdminSettings() {
           <h1 className="text-3xl font-black tracking-tight">System Configuration</h1>
           <p className="text-muted-foreground font-medium italic">Master controls for pricing, security, and global endpoints.</p>
         </div>
-        <Button
-          onClick={handleSave}
-          disabled={saving}
-          className="rounded-xl h-12 px-8 font-black gradient-primary shadow-xl shadow-primary/20 hover:scale-[1.02] transition-transform"
-        >
-          {saving ? <><Terminal className="mr-2 h-4 w-4 animate-pulse" /> Syncing...</> : <><Save className="mr-2 h-5 w-5" /> Save Configuration</>}
-        </Button>
+        <div className="flex items-center gap-4">
+          <Button
+            onClick={handleTestConnection}
+            variant="outline"
+            className="rounded-xl h-12 px-6 font-black border-primary/20 hover:bg-primary/5 transition-all text-primary"
+          >
+            <Wifi className="mr-2 h-4 w-4" /> Test Link
+          </Button>
+          <Button
+            onClick={handleSave}
+            disabled={saving}
+            className="rounded-xl h-12 px-8 font-black gradient-primary shadow-xl shadow-primary/20 hover:scale-[1.02] transition-transform"
+          >
+            {saving ? <><Terminal className="mr-2 h-4 w-4 animate-pulse" /> Syncing...</> : <><Save className="mr-2 h-5 w-5" /> Save Configuration</>}
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-8">

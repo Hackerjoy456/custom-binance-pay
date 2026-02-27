@@ -95,9 +95,23 @@ export default function AdminVerificationLogs() {
       });
     } catch (e: any) {
       console.error("Release error:", e);
+      let message = e.message || "An unexpected error occurred.";
+
+      // Try to parse the error context if it exists (for FunctionsHttpError)
+      try {
+        if (e.context && typeof e.context.json === 'function') {
+          const details = await e.context.json();
+          if (details.error) message = details.error;
+        } else if (e.context && e.context.message) {
+          message = e.context.message;
+        }
+      } catch (err) {
+        console.warn("Could not parse error details", err);
+      }
+
       Swal.fire({
         title: "Operation Failed",
-        text: e.message || "An unexpected error occurred during the release process.",
+        text: message,
         icon: "error",
         background: "#0f172a",
         color: "#f8fafc",
@@ -266,7 +280,34 @@ export default function AdminVerificationLogs() {
           <div className="flex items-center gap-3">
             <Button variant="ghost" className="rounded-xl h-10 px-5 font-black text-xs hover:bg-primary/10">Show More</Button>
             <div className="h-10 w-px bg-border/40 mx-2" />
-            <Button variant="ghost" className="rounded-xl h-10 px-5 font-black text-xs text-destructive hover:bg-destructive/10">Purge Logs</Button>
+            <Button
+              variant="ghost"
+              className="rounded-xl h-10 px-5 font-black text-xs text-destructive hover:bg-destructive/10"
+              onClick={async () => {
+                const result = await Swal.fire({
+                  title: "Purge All Logs?",
+                  text: "This will permanently delete every single verification record. This is a destructive operation.",
+                  icon: "warning",
+                  showCancelButton: true,
+                  confirmButtonColor: "#ef4444",
+                  confirmButtonText: "Yes, Purge Everything",
+                  background: "#0f172a",
+                  color: "#f8fafc",
+                });
+                if (result.isConfirmed) {
+                  try {
+                    const { data, error } = await supabase.functions.invoke("admin-maintenance", { body: { action: "clear_logs" } });
+                    if (error) throw error;
+                    setLogs([]);
+                    Swal.fire({ title: "Purged", icon: "success", background: "#0f172a", color: "#f8fafc" });
+                  } catch (e: any) {
+                    Swal.fire({ title: "Error", text: e.message || "Failed to purge logs", icon: "error", background: "#0f172a", color: "#f8fafc" });
+                  }
+                }
+              }}
+            >
+              Purge Logs
+            </Button>
           </div>
         </div>
       </Card>
