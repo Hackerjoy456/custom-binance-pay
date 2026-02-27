@@ -106,7 +106,17 @@ export default function AdminVerificationLogs() {
       console.error("Release error:", e);
       let message = e.message || "An unexpected error occurred.";
 
-      // Try to parse the error context if it exists (for FunctionsHttpError)
+      // If message is a JSON string (typical for FunctionsHttpError), try to parse it
+      if (message.startsWith('{') && message.endsWith('}')) {
+        try {
+          const parsed = JSON.parse(message);
+          if (parsed.name === "FunctionsHttpError") {
+            message = "Edge Function returned an error. Check if your project is correctly set up.";
+          }
+        } catch (err) { }
+      }
+
+      // Try to parse the error context if it exists
       try {
         if (e.context && typeof e.context.json === 'function') {
           const details = await e.context.json();
