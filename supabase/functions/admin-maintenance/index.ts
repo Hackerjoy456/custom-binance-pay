@@ -83,6 +83,20 @@ Deno.serve(async (req) => {
             return json({ success: true, message: "All used transaction records have been cleared." });
         }
 
+        if (action === "release_transaction") {
+            const { transaction_id, user_id } = body;
+            if (!transaction_id || !user_id) return json({ error: "Transaction ID and User ID are required" }, 400);
+
+            const [logRes, txRes] = await Promise.all([
+                supabaseAdmin.from("payment_verification_logs").delete().eq("transaction_id", transaction_id).eq("user_id", user_id),
+                supabaseAdmin.from("used_transactions").delete().eq("transaction_id", transaction_id).eq("user_id", user_id)
+            ]);
+
+            if (logRes.error || txRes.error) throw logRes.error || txRes.error;
+
+            return json({ success: true, message: `Transaction ${transaction_id} released successfully.` });
+        }
+
         if (action === "delete_single") {
             const { table, id } = body;
             if (!table || !id) return json({ error: "Table and ID are required" }, 400);
@@ -96,7 +110,7 @@ Deno.serve(async (req) => {
             return json({ success: true, message: `Record deleted from ${table}.` });
         }
 
-        return json({ error: "Unknown action. Use 'clear_logs', 'clear_used_transactions', or 'delete_single'" }, 400);
+        return json({ error: "Unknown action. Use 'clear_logs', 'clear_used_transactions', 'release_transaction', or 'delete_single'" }, 400);
     } catch (e) {
         return json({ error: "Failed to perform maintenance: " + e.message }, 500);
     }

@@ -40,21 +40,25 @@ export default function AdminVerificationLogs() {
     return email.includes(query) || txId.includes(query);
   });
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this specific log entry? This action cannot be undone.")) return;
+  const handleRelease = async (log: any) => {
+    if (!confirm(`Are you sure you want to release transaction ${log.transaction_id || 'unnamed'}? This will delete the log AND allow it to be verified again.`)) return;
 
-    setIsDeleting(id);
+    setIsDeleting(log.id);
     try {
       const { data, error } = await supabase.functions.invoke("admin-maintenance", {
-        body: { action: "delete_single", table: "payment_verification_logs", id }
+        body: {
+          action: "release_transaction",
+          transaction_id: log.transaction_id,
+          user_id: log.user_id
+        }
       });
 
       if (error) throw error;
 
-      setLogs(logs.filter(l => l.id !== id));
-      toast.success("Log entry deleted successfully");
+      setLogs(logs.filter(l => l.id !== log.id));
+      toast.success("Transaction released and log removed");
     } catch (e: any) {
-      toast.error(e.message || "Failed to delete log entry");
+      toast.error(e.message || "Failed to release transaction");
     } finally {
       setIsDeleting(null);
     }
@@ -187,11 +191,11 @@ export default function AdminVerificationLogs() {
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-8 w-8 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-                          onClick={() => handleDelete(log.id)}
+                          className="h-8 w-8 rounded-lg text-muted-foreground hover:text-amber-500 hover:bg-amber-500/10 transition-colors"
+                          onClick={() => handleRelease(log)}
                           disabled={isDeleting === log.id}
                         >
-                          {isDeleting === log.id ? <Clock className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                          {isDeleting === log.id ? <Clock className="h-4 w-4 animate-spin" /> : <ShieldX className="h-4 w-4" />}
                         </Button>
                       </TableCell>
                       <TableCell className="py-5 pr-8 text-right">
