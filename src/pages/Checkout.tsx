@@ -157,10 +157,12 @@ export default function Checkout() {
     useEffect(() => {
         if (verifying || isExpired || success || !amount) return;
         const trimmed = txId.trim();
-        if (trimmed.length > 20 && trimmed !== lastVerifiedTxId) {
+
+        // Trigger verification if the user stops typing for 1.2 seconds
+        if (trimmed.length > 0 && trimmed !== lastVerifiedTxId) {
             const timer = setTimeout(() => {
                 runVerification(trimmed);
-            }, 1000);
+            }, 1200);
             return () => clearTimeout(timer);
         }
     }, [txId, verifying, isExpired, success, amount, lastVerifiedTxId]);

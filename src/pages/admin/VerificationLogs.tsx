@@ -5,7 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { Activity, ShieldCheck, AlertCircle, Clock, Search, Filter, Download, Terminal, ChevronRight, User, Hash, DollarSign } from "lucide-react";
+import { Activity, ShieldCheck, AlertCircle, Clock, Search, Filter, Download, Terminal, User, Hash, DollarSign } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
